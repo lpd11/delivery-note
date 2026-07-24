@@ -129,7 +129,7 @@ table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
 }
 .loading-text{color:var(--p-teal-deep);font-weight:600;}
 @keyframes spin{to{transform:rotate(360deg);}}
-@media (prefers-reduced-motion:reduce){ .spinner{animation:none;} }
+/* คงตัวหมุนไว้แม้เปิด reduce motion (เป็น feedback ที่จำเป็น) */
 
 @media print{
   .doc-stage{background:#fff;padding:0;min-height:auto;}

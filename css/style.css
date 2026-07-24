@@ -221,5 +221,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);}
 .toast-error{background:var(--danger);}
 
 @media (prefers-reduced-motion:reduce){
-  *{animation:none!important;transition:none!important;}
+  /* คงตัวหมุนโหลดไว้ (เป็น feedback ที่จำเป็น) แต่ตัดการเคลื่อนไหวอื่น */
+  *:not(.spinner){animation:none!important;}
+  *{transition:none!important;}
 }
