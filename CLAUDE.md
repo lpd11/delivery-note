@@ -84,12 +84,20 @@ repo เดียวกับที่ตั้ง Pages ไว้ (`lpd11.githu
 - ความต่างของ 2 ประเภทเอกสาร (หัวเรื่อง/บรรทัดร้าน/ตัวอักษรเงิน/ช่องเซ็น) เรนเดอร์ด้วย JS ใน `print.js` — **ห้ามใช้ CSS `display:block` toggle ทับ `.signs{display:flex}`**
 - manifest ใช้ไอคอน SVG — ใช้ Add to Home Screen ได้ ถ้าอยากให้ install prompt เต็มรูปแบบ ค่อยเพิ่ม PNG 192/512
 
-## สถานะ (24 ก.ค. 2569 / 2026)
+## สถานะ (24 ก.ค. 2569 / 2026) — DEPLOY แล้ว ✅
 
 - [x] Frontend ครบ 4 หน้า + พิมพ์ A4 2 ประเภท + bahtText ภาษาไทย
 - [x] Backend `Code.gs` + สคีมา 5 ชีต
 - [x] ทดสอบ mock mode ผ่าน (บันทึก/อ่าน/ลบ/upsert/คำนวณ/เรนเดอร์เอกสาร) ด้วย Node+jsdom
-- [ ] Deploy backend จริง (รอสร้าง Sheet + วาง API_URL)
-- [ ] Deploy GitHub Pages
+- [x] **Deploy backend จริง** — Apps Script bound Sheet + web app (URL อยู่ใน js/api.js), user authorize แล้ว, endpoint ตอบสด
+- [x] **Deploy GitHub Pages** → https://lpd11.github.io/delivery-note/
+- [ ] ทดสอบ saveBill สด (บิลจริงใบแรกเป็นตัวยืนยัน — เลี่ยงกินเลข 6907-001)
 - [ ] ใส่โลโก้จริงของร้าน (ตอนนี้ใช้ไอคอนบ้าน+เค้กชั่วคราว) — อัปโหลดผ่านหน้า "ตั้งค่า"
+
+### Resource IDs (บัญชี eliang11@gmail.com)
+- Repo: `lpd11/delivery-note` (GitHub Pages: main /)
+- Apps Script scriptId: `1j4G5g40eXkcf9-QvH7MZJKH5roqIFgkN4JiCwdA5_08Zbh11gSo-x1uO`
+- Spreadsheet (DB): `1MJpgMKxYYIw3eSnUoLGeZgaEwqP5hCqtu_QDySaFonE`
+- Web app deployment: `AKfycbxs1CmzcF-LkkAy1JnwZ0ysVWGoogZ6n7g6cDdvXMUXcGJyKG62G-Eh2RkTh0fAVbzw`
+- redeploy backend: `clasp push --force` + `clasp update-deployment -i <deployment>` (อย่าสร้างใหม่ URL จะเปลี่ยน)
 ```
