@@ -12,8 +12,12 @@
   --p-ink:#173B41;
   --p-paper:#FCFCFA;
   --p-line:#1B6B78;
+  --p-grid:#7FB4BC;
   --p-muted:#5E7A80;
 }
+
+/* หน้า print ไม่ได้โหลด style.css — reset box model เองเพื่อให้ height ตารางเป๊ะ */
+.doc-stage *{box-sizing:border-box;}
 
 /* แถบเครื่องมือเหนือกระดาษ (ซ่อนตอนพิมพ์) */
 .doc-stage{background:#B9E4DA;min-height:100vh;padding:24px 14px 60px;}
@@ -53,23 +57,37 @@
 
 .rule{height:3px;background:var(--p-cream);border-radius:3px;margin:16px 0 14px;}
 
-.party{display:flex;gap:10px;align-items:baseline;font-size:15px;margin-bottom:14px;}
+.party-block{margin-bottom:14px;}
+.party{display:flex;gap:10px;align-items:baseline;font-size:15px;margin-bottom:5px;}
+.party:last-child{margin-bottom:0;}
 .party .lbl{color:var(--p-muted);}
 .party .val{font-weight:700;border-bottom:1px dotted var(--p-muted);flex:1;padding-bottom:2px;}
+.party-extra{font-size:14px;}
+.party-extra .lbl{white-space:nowrap;}
+.party-extra .val{font-weight:400;}
+.party-extra[hidden]{display:none;}
 
-table.doc-table{width:100%;border-collapse:collapse;font-size:14px;}
+table.doc-table{
+  width:100%;border-collapse:collapse;font-size:14px;
+  border:1.5px solid var(--p-teal);           /* กรอบนอกเข้มกว่าเส้นใน */
+  table-layout:fixed;
+}
+table.doc-table th,table.doc-table td{border:1px solid var(--p-grid);}  /* เส้นในสม่ำเสมอ */
 table.doc-table thead th{
   background:var(--p-cream);color:var(--p-teal-deep);font-weight:700;
-  padding:9px 10px;border:1px solid var(--p-line);text-align:center;
+  height:38px;padding:0 10px;text-align:center;vertical-align:middle;
+  border-bottom:1.5px solid var(--p-teal);    /* เส้นใต้หัวตารางเข้ม */
 }
-table.doc-table tbody td{border:1px solid rgba(27,107,120,.55);padding:8px 10px;vertical-align:top;}
-table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.18);}
-.c-no{width:44px;text-align:center;color:var(--p-muted);}
-.c-qty{width:70px;text-align:center;font-variant-numeric:tabular-nums;}
-.c-price,.c-amt{width:110px;text-align:right;font-variant-numeric:tabular-nums;}
-.empty-cell td{height:34px;}
+table.doc-table tbody td{
+  height:36px;padding:6px 10px;vertical-align:middle;   /* ทุกแถวสูงเท่ากัน 36px */
+}
+table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
+.c-no{width:12%;text-align:center;color:var(--p-muted);}
+.c-desc{width:auto;}
+.c-qty{width:14%;text-align:center;font-variant-numeric:tabular-nums;}
+.c-price,.c-amt{width:18%;text-align:right;font-variant-numeric:tabular-nums;}
 
-.totrow td{border:1px solid var(--p-line);padding:10px;font-weight:800;font-size:16px;}
+.totrow td{padding:10px;font-weight:800;font-size:16px;border-top:1.5px solid var(--p-teal);}
 .totrow .tot-words{text-align:right;background:var(--p-mint-soft);font-weight:700;font-size:14px;color:var(--p-teal-deep);}
 .totrow .tot-label{text-align:right;background:var(--p-mint-soft);}
 .totrow .tot-amt{text-align:right;background:var(--p-cream-soft);color:var(--p-teal-deep);font-variant-numeric:tabular-nums;}

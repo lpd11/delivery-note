@@ -5,22 +5,27 @@
 
 let docType = 'delivery';
 let productPriceMap = {}; // ชื่อสินค้า -> ราคาล่าสุด (เติมราคาให้อัตโนมัติ)
+let shopInfoMap = {};     // ชื่อร้าน -> {address, taxId} (เติมอัตโนมัติเมื่อเลือกร้านเดิม)
 
 document.addEventListener('DOMContentLoaded', init);
 
 async function init() {
   document.getElementById('bill-date').value = getTodayDateString();
 
-  // toggle ประเภทเอกสาร
+  // toggle ประเภทเอกสาร (โชว์ช่องที่อยู่/เลขภาษีเฉพาะใบเสร็จ)
   document.getElementById('doc-toggle').addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
     docType = btn.dataset.type;
     document.querySelectorAll('#doc-toggle button').forEach(b => b.classList.toggle('active', b === btn));
+    document.getElementById('receipt-fields').hidden = (docType !== 'receipt');
   });
 
   document.getElementById('btn-add-item').addEventListener('click', () => addItemRow());
   document.getElementById('btn-save').addEventListener('click', saveCurrentBill);
+
+  // เลือก/พิมพ์ร้านที่เคยมี -> เติมที่อยู่/เลขภาษีให้อัตโนมัติ
+  document.getElementById('shop').addEventListener('change', autofillShopInfo);
 
   addItemRow(); // แถวแรก
 
@@ -28,11 +33,21 @@ async function init() {
   loadShopsAndProducts();
 }
 
+function autofillShopInfo() {
+  const key = document.getElementById('shop').value.trim();
+  const info = shopInfoMap[key];
+  if (!info) return;
+  if (info.address) document.getElementById('cust-address').value = info.address;
+  if (info.taxId) document.getElementById('cust-taxid').value = info.taxId;
+}
+
 async function loadShopsAndProducts() {
   try {
     const [shops, products] = await Promise.all([getShops(), getProducts()]);
     const shopList = document.getElementById('shops-list');
     shopList.innerHTML = (shops || []).map(s => `<option value="${escapeHtml(s.name)}">`).join('');
+    shopInfoMap = {};
+    (shops || []).forEach(s => { shopInfoMap[s.name.trim()] = { address: s.address || '', taxId: s.taxId || '' }; });
 
     const prodList = document.getElementById('products-list');
     prodList.innerHTML = (products || []).map(p => `<option value="${escapeHtml(p.name)}">`).join('');
@@ -121,10 +136,13 @@ async function saveCurrentBill() {
   if (bad) { toast('กรอกชื่อสินค้าและจำนวนให้ครบทุกรายการ', 'error'); return; }
 
   const total = items.reduce((s, it) => s + it.amount, 0);
+  // ที่อยู่/เลขภาษี เก็บเฉพาะใบเสร็จ
+  const shopAddress = docType === 'receipt' ? document.getElementById('cust-address').value.trim() : '';
+  const shopTaxId = docType === 'receipt' ? document.getElementById('cust-taxid').value.trim() : '';
 
   showLoading('กำลังบันทึก...');
   try {
-    const res = await saveBill({ docType, date, shopName, items, totalAmount: total });
+    const res = await saveBill({ docType, date, shopName, shopAddress, shopTaxId, items, totalAmount: total });
     invalidateBillsCache();
     hideLoading();
     // ไปหน้าพิมพ์

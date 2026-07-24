@@ -42,6 +42,17 @@
         <label for="bill-date">วันที่</label>
         <input type="date" id="bill-date">
       </div>
+
+      <div id="receipt-fields" hidden>
+        <div class="field">
+          <label for="cust-address">ที่อยู่ลูกค้า <span class="opt">(สำหรับใบเสร็จ)</span></label>
+          <textarea id="cust-address" rows="2" placeholder="ที่อยู่สำหรับออกใบเสร็จ (ถ้ามี)"></textarea>
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label for="cust-taxid">เลขประจำตัวผู้เสียภาษี</label>
+          <input type="text" id="cust-taxid" inputmode="numeric" placeholder="เลข 13 หลัก (ถ้ามี)">
+        </div>
+      </div>
     </div>
 
     <div class="card">

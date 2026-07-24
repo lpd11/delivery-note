@@ -80,6 +80,8 @@ a{color:var(--teal);text-decoration:none;}
 /* ---------- form fields ---------- */
 .field{margin-bottom:14px;}
 .field > label{display:block;font-size:14px;font-weight:600;margin-bottom:5px;color:var(--ink);}
+.field > label .opt{font-weight:400;font-size:12px;color:var(--muted);}
+textarea{resize:vertical;min-height:44px;}
 input[type=text],input[type=tel],input[type=date],input[type=number],select,textarea{
   width:100%;font-family:inherit;font-size:16px;color:var(--ink);
   background:#fff;border:1.5px solid var(--line);border-radius:10px;

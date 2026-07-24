@@ -55,9 +55,9 @@ function handle_(fn) {
 // ==========================================
 const HEADERS = {
   'Settings':  ['storeName', 'tagline', 'phone', 'logoBase64'],
-  'Shops':     ['shopId', 'name', 'phone', 'address', 'createdAt'],
+  'Shops':     ['shopId', 'name', 'phone', 'address', 'taxId', 'createdAt'],
   'Products':  ['productId', 'name', 'defaultPrice'],
-  'Bills':     ['billId', 'docType', 'date', 'shopId', 'shopName', 'totalAmount', 'itemCount', 'createdAt'],
+  'Bills':     ['billId', 'docType', 'date', 'shopId', 'shopName', 'shopAddress', 'shopTaxId', 'totalAmount', 'itemCount', 'createdAt'],
   'BillItems': ['billId', 'lineNo', 'productName', 'qty', 'unitPrice', 'amount']
 };
 
@@ -71,8 +71,28 @@ function sheet_(name) {
     if (name === 'Settings') {
       sh.appendRow(['บ้านกัปตัน', 'ขนมโฮมเมด · เบเกอรี่', '', '']);
     }
+  } else if (HEADERS[name]) {
+    ensureColumns_(sh, HEADERS[name]); // migrate ชีตเดิมให้มีคอลัมน์ใหม่
   }
   return sh;
+}
+
+/** เพิ่ม header คอลัมน์ที่ยังไม่มี (ต่อท้าย) — รองรับสคีมาใหม่บนชีตเดิม */
+function ensureColumns_(sh, headers) {
+  const lastCol = sh.getLastColumn();
+  const current = lastCol > 0 ? sh.getRange(1, 1, 1, lastCol).getValues()[0] : [];
+  const missing = headers.filter(h => current.indexOf(h) === -1);
+  if (missing.length > 0) {
+    sh.getRange(1, current.length + 1, 1, missing.length).setValues([missing])
+      .setFontWeight('bold').setBackground('#CDEBE3');
+  }
+}
+
+/** เพิ่มแถวโดยจับคู่ค่าตาม header (ไม่พึ่งลำดับคอลัมน์คงที่ — ปลอดภัยเมื่อสคีมาเปลี่ยน) */
+function appendByHeader_(sh, obj) {
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  const row = headers.map(h => (obj[h] !== undefined && obj[h] !== null) ? obj[h] : '');
+  sh.appendRow(row);
 }
 
 function rows_(sh) {
@@ -118,17 +138,32 @@ function saveSettings_(data) {
 // SHOPS
 // ==========================================
 function getShops_() {
-  return rows_(sheet_('Shops')).map(r => ({ shopId: r.shopId, name: r.name, phone: r.phone, address: r.address }));
+  return rows_(sheet_('Shops')).map(r => ({ shopId: r.shopId, name: r.name, phone: r.phone, address: r.address, taxId: r.taxId }));
 }
 
-function addShop_(data) {
+/** หาร้านตามชื่อ: มีอยู่แล้ว → อัปเดต address/taxId/phone (เฉพาะที่ส่งมา); ไม่มี → สร้างใหม่ */
+function upsertShop_(data) {
   const sh = sheet_('Shops');
-  const existing = rows_(sh).find(r => String(r.name).trim() === String(data.name).trim());
-  if (existing) return { shopId: existing.shopId };
+  const name = String(data.name || '').trim();
+  const existing = rows_(sh).find(r => String(r.name).trim() === name);
+  if (existing) {
+    const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    const setIf = (key, val) => {
+      if (val === undefined || val === null || val === '') return;
+      const col = headers.indexOf(key) + 1;
+      if (col > 0) sh.getRange(existing._rowNum, col).setValue(val);
+    };
+    setIf('address', data.address);
+    setIf('taxId', data.taxId);
+    setIf('phone', data.phone);
+    return { shopId: existing.shopId };
+  }
   const shopId = 'SH-' + new Date().getTime();
-  sh.appendRow([shopId, String(data.name).trim(), data.phone || '', data.address || '', new Date()]);
+  appendByHeader_(sh, { shopId, name, phone: data.phone || '', address: data.address || '', taxId: data.taxId || '', createdAt: new Date() });
   return { shopId: shopId };
 }
+
+function addShop_(data) { return upsertShop_(data); }
 
 // ==========================================
 // PRODUCTS
@@ -181,20 +216,21 @@ function saveBill_(data) {
   // เพิ่มร้านถ้ายังไม่มี
   let shopId = data.shopId || '';
   if (data.shopName) {
-    shopId = addShop_({ name: data.shopName }).shopId;
+    shopId = upsertShop_({ name: data.shopName, address: data.shopAddress, taxId: data.shopTaxId }).shopId;
   }
 
   upsertProducts_(items);
 
   const total = items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
-  sheet_('Bills').appendRow([
-    billId, data.docType || 'delivery', data.date || '', shopId,
-    data.shopName || '', total, items.length, new Date()
-  ]);
+  appendByHeader_(sheet_('Bills'), {
+    billId: billId, docType: data.docType || 'delivery', date: data.date || '', shopId: shopId,
+    shopName: data.shopName || '', shopAddress: data.shopAddress || '', shopTaxId: data.shopTaxId || '',
+    totalAmount: total, itemCount: items.length, createdAt: new Date()
+  });
 
   const itemSheet = sheet_('BillItems');
   items.forEach((it, idx) => {
-    itemSheet.appendRow([billId, idx + 1, it.productName, Number(it.qty) || 0, Number(it.unitPrice) || 0, Number(it.amount) || 0]);
+    appendByHeader_(itemSheet, { billId: billId, lineNo: idx + 1, productName: it.productName, qty: Number(it.qty) || 0, unitPrice: Number(it.unitPrice) || 0, amount: Number(it.amount) || 0 });
   });
 
   return { billId: billId };
@@ -218,7 +254,8 @@ function getBill_(billId) {
   return {
     bill: {
       billId: bill.billId, docType: bill.docType, date: dateStr_(bill.date),
-      shopName: bill.shopName, totalAmount: Number(bill.totalAmount) || 0
+      shopName: bill.shopName, shopAddress: bill.shopAddress || '', shopTaxId: bill.shopTaxId || '',
+      totalAmount: Number(bill.totalAmount) || 0
     },
     items: items
   };

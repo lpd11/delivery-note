@@ -43,6 +43,16 @@ function applyBill(bill, items) {
   document.getElementById('doc-no').textContent = bill.billId || '-';
   document.getElementById('doc-date').textContent = thaiShortDate(bill.date);
 
+  // ที่อยู่ + เลขประจำตัวผู้เสียภาษี (เฉพาะใบเสร็จ — เว้นบรรทัดว่างไว้เขียนมือได้ถ้าไม่กรอก)
+  const addrRow = document.getElementById('party-address-row');
+  const taxRow = document.getElementById('party-taxid-row');
+  addrRow.hidden = !isReceipt;
+  taxRow.hidden = !isReceipt;
+  if (isReceipt) {
+    document.getElementById('party-address').textContent = (bill.shopAddress || '').replace(/\r?\n/g, ' ') || ' ';
+    document.getElementById('party-taxid').textContent = bill.shopTaxId || ' ';
+  }
+
   // รายการ
   const tbody = document.getElementById('doc-items');
   const rows = (items || []).map((it, i) => `

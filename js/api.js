@@ -115,8 +115,8 @@ function initMockDatabase() {
   });
 
   seed('mock_shops', [
-    { shopId: 'SH-1', name: 'ร้านกาแฟ มุมสุข', phone: '', address: '' },
-    { shopId: 'SH-2', name: 'ร้านของฝาก ริมทาง', phone: '', address: '' }
+    { shopId: 'SH-1', name: 'ร้านกาแฟ มุมสุข', phone: '', address: '', taxId: '' },
+    { shopId: 'SH-2', name: 'ร้านของฝาก ริมทาง', phone: '', address: '', taxId: '' }
   ]);
 
   seed('mock_products', [
@@ -191,15 +191,16 @@ async function mockApiRequest(action, method) {
       const mm = String(now.getMonth() + 1).padStart(2, '0');
       const billId = `${yy}${mm}-${String(seq).padStart(3, '0')}`;
 
-      // เพิ่มร้านใหม่ถ้ายังไม่มี
+      // เพิ่ม/อัปเดตร้าน (จำ address/taxId ไว้เติมอัตโนมัติครั้งหน้า)
       let shopId = d.shopId || '';
-      if (d.shopName && !shops.find(s => s.name.trim() === d.shopName.trim())) {
-        shopId = 'SH-' + Date.now();
-        shops.push({ shopId, name: d.shopName.trim(), phone: '', address: '' });
+      if (d.shopName) {
+        const nm = d.shopName.trim();
+        let sh = shops.find(s => s.name.trim() === nm);
+        if (!sh) { sh = { shopId: 'SH-' + Date.now(), name: nm, phone: '', address: '', taxId: '' }; shops.push(sh); }
+        if (d.shopAddress) sh.address = d.shopAddress;
+        if (d.shopTaxId) sh.taxId = d.shopTaxId;
+        shopId = sh.shopId;
         set('mock_shops', shops);
-      } else if (d.shopName) {
-        const sh = shops.find(s => s.name.trim() === d.shopName.trim());
-        if (sh) shopId = sh.shopId;
       }
 
       // upsert สินค้า + อัปเดตราคาล่าสุด
@@ -214,8 +215,8 @@ async function mockApiRequest(action, method) {
       const total = (d.items || []).reduce((s, it) => s + (Number(it.amount) || 0), 0);
       bills.push({
         billId, docType: d.docType || 'delivery', date: d.date,
-        shopId, shopName: d.shopName || '', totalAmount: total,
-        itemCount: (d.items || []).length, createdAt: now.toISOString()
+        shopId, shopName: d.shopName || '', shopAddress: d.shopAddress || '', shopTaxId: d.shopTaxId || '',
+        totalAmount: total, itemCount: (d.items || []).length, createdAt: now.toISOString()
       });
       set('mock_bills', bills);
 
