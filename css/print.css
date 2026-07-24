@@ -33,6 +33,9 @@
   margin:0 auto;padding:16mm 15mm;
   box-shadow:0 12px 40px rgba(18,60,66,.22);border-radius:2px;
   display:flex;flex-direction:column;
+  /* บังคับให้พิมพ์สีพื้นหลัง (หัวตาราง/ยอดรวม) ออกมาด้วย — inherited ทั้งเอกสาร */
+  -webkit-print-color-adjust:exact;
+  print-color-adjust:exact;
 }
 
 .doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;}
@@ -92,9 +95,28 @@ table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.18);}
   .sign{width:auto;}
 }
 
+/* กล่องโหลด (สร้างจาก app.js) — ต้องมีสไตล์เพราะหน้านี้ไม่ได้โหลด style.css
+   ไม่งั้นจะโผล่เป็นข้อความ "กำลังเตรียมเอกสาร..." ค้างบนหน้า */
+.loading-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(185,228,218,.88);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  font-family:"Sarabun","Leelawadee UI","Noto Sans Thai","Tahoma",sans-serif;
+}
+.loading-overlay.active{display:flex;}
+.spinner{
+  width:42px;height:42px;border-radius:50%;
+  border:4px solid var(--p-mint);border-top-color:var(--p-teal);
+  animation:spin .8s linear infinite;
+}
+.loading-text{color:var(--p-teal-deep);font-weight:600;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion:reduce){ .spinner{animation:none;} }
+
 @media print{
   .doc-stage{background:#fff;padding:0;min-height:auto;}
   .doc-actions{display:none;}
+  .loading-overlay{display:none!important;}
   .paper{box-shadow:none;width:auto;min-height:auto;padding:12mm 10mm;border-radius:0;}
   @page{size:A4;margin:0;}
 }
