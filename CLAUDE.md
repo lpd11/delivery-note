@@ -2,9 +2,20 @@
 
 ## โปรเจกต์คืออะไร
 
-แอปมือถือ (PWA) ให้ร้านขนม **"บ้านกัปตัน"** ออก **ใบส่งของ** และ **ใบเสร็จรับเงิน** แทนการเขียนมือ
+แอปมือถือ (PWA) ให้ร้านขนม **"บ้านกัปตัน"** (แฟนของเจ้าของบัญชี) ออก **ใบส่งของ** และ **ใบเสร็จรับเงิน** แทนการเขียนมือ
 เลือกร้าน + กรอกรายการ → บันทึกลง Google Sheet → พิมพ์เป็น A4 / บันทึก PDF → แชร์เข้า LINE
 พร้อมจำร้านค้า/รายการขนม และเก็บประวัติบิลดูย้อนหลังได้
+
+## ฟีเจอร์ทั้งหมด
+
+- **เลือกประเภทเอกสารต่อบิล:** ใบส่งของ / ใบเสร็จรับเงิน (toggle บนสุด)
+- **เลือกร้านค้า:** dropdown จำร้านเดิม + พิมพ์ร้านใหม่ได้ (บันทึกอัตโนมัติตอน save)
+- **รายการสินค้า:** กด + เพิ่มได้, autocomplete ชื่อขนมที่เคยขาย, จำราคาล่าสุด, คูณ+รวมยอดอัตโนมัติ
+- **ใบเสร็จ:** มี "จำนวนเงินเป็นตัวอักษรไทย" (…บาทถ้วน) + ช่อง **ที่อยู่ลูกค้า** + **เลขประจำตัวผู้เสียภาษี** (จำต่อร้าน เลือกร้านเดิมเติมให้อัตโนมัติ)
+- **พิมพ์ A4:** ดีไซน์แบรนด์ (มิ้นต์/ครีม/เขียว) → Save as PDF → แชร์ LINE; ช่องเซ็นซ้าย-ขวา (ใบส่งของ: ผู้ส่ง/ผู้รับสินค้า, ใบเสร็จ: ผู้ส่งของ/ผู้รับเงิน)
+- **ประวัติบิล:** ลิสต์ + ป้ายประเภท + ค้นชื่อร้าน/เลขบิล + กรองประเภท + แตะเพื่อพิมพ์ซ้ำ
+- **ตั้งค่าหัวบิล:** ชื่อร้าน/คำโปรย/เบอร์ + อัปโหลดโลโก้ (ย่อ+เข้ารหัสอัตโนมัติ)
+- **PWA:** Add to Home Screen, ใช้ offline ได้ (SW network-first)
 
 ## Stack
 
@@ -81,7 +92,10 @@ repo เดียวกับที่ตั้ง Pages ไว้ (`lpd11.githu
 - **โลโก้ base64**: ย่อ/เข้ารหัสฝั่ง client (`settings.js` → `encodeLogo`) ให้ ≤ 45,000 ตัวอักษร (กัน cell Sheet เกินลิมิต ~50,000) — ลอง PNG ก่อน ใหญ่ไปค่อย fallback JPEG/ย่อขนาด
 - **หลังบันทึกบิลต้อง `invalidateBillsCache()`** ไม่งั้นหน้าประวัติโชว์ของเก่า (SWR cache)
 - fetch ใช้ `Content-Type: text/plain` เท่านั้น (เลี่ยง CORS preflight ของ Apps Script)
-- ความต่างของ 2 ประเภทเอกสาร (หัวเรื่อง/บรรทัดร้าน/ตัวอักษรเงิน/ช่องเซ็น) เรนเดอร์ด้วย JS ใน `print.js` — **ห้ามใช้ CSS `display:block` toggle ทับ `.signs{display:flex}`**
+- ความต่างของ 2 ประเภทเอกสาร (หัวเรื่อง/บรรทัดร้าน/ที่อยู่+เลขภาษี/ตัวอักษรเงิน/ช่องเซ็น) เรนเดอร์ด้วย JS ใน `print.js` — **ห้ามใช้ CSS `display:block` toggle ทับ `.signs{display:flex}`** (element ที่เป็น flex ให้คุมโชว์/ซ่อนด้วย `hidden` + `.xxx[hidden]{display:none}` ที่ specificity สูงพอ)
+- **`print.html` ไม่ได้โหลด `style.css`** → print.css ต้องมี `box-sizing:border-box` (`.doc-stage *`) เอง ไม่งั้นแถวตาราง `height`+`padding` บวกกันทำให้แถวว่างสูงเกิน; และต้องมีสไตล์ `.loading-overlay` เองไม่งั้นข้อความ loading โผล่ค้าง
+- **พิมพ์สีพื้นหลังไม่ออก** เป็นค่า default ของเบราว์เซอร์ → ต้องมี `print-color-adjust:exact` (ใส่ที่ `.paper` เป็น inherited) ไม่งั้นหัวตาราง/ยอดรวมสีหาย
+- **แก้สคีมา Sheet:** เพิ่มคอลัมน์ใหม่ใน `HEADERS` แล้ว `sheet_()` จะ `ensureColumns_()` ต่อท้ายให้ชีตเดิมอัตโนมัติ; การเขียนแถวใช้ `appendByHeader_()` (จับคู่ตาม header ไม่พึ่งลำดับคอลัมน์) — **อย่าใช้ `appendRow([...])` แบบ positional** เพราะสคีมา migrate แล้วลำดับจะเพี้ยน
 - manifest ใช้ไอคอน SVG — ใช้ Add to Home Screen ได้ ถ้าอยากให้ install prompt เต็มรูปแบบ ค่อยเพิ่ม PNG 192/512
 
 ## สถานะ (24 ก.ค. 2569 / 2026) — DEPLOY แล้ว ✅
@@ -99,5 +113,17 @@ repo เดียวกับที่ตั้ง Pages ไว้ (`lpd11.githu
 - Apps Script scriptId: `1j4G5g40eXkcf9-QvH7MZJKH5roqIFgkN4JiCwdA5_08Zbh11gSo-x1uO`
 - Spreadsheet (DB): `1MJpgMKxYYIw3eSnUoLGeZgaEwqP5hCqtu_QDySaFonE`
 - Web app deployment: `AKfycbxs1CmzcF-LkkAy1JnwZ0ysVWGoogZ6n7g6cDdvXMUXcGJyKG62G-Eh2RkTh0fAVbzw`
-- redeploy backend: `clasp push --force` + `clasp update-deployment -i <deployment>` (อย่าสร้างใหม่ URL จะเปลี่ยน)
-```
+- redeploy backend: `clasp push --force` + `clasp create-deployment -i <deployment>` (redeploy ทับตัวเดิม — อย่าสร้างใหม่ URL จะเปลี่ยน)
+- redeploy frontend: `git push origin main` → GitHub Pages build เอง ~1-2 นาที (ถ้าแก้ asset ให้ bump `CACHE` ใน `sw.js`)
+- **`.clasp.json`/`.claspignore` ถูก gitignore** (ไม่ push ขึ้น repo) — เก็บไว้ในเครื่องสำหรับ clasp; `.claspignore` ตั้งให้ push เฉพาะ `Code.gs`+`appsscript.json` ไม่เอาไฟล์ frontend ขึ้น Apps Script
+
+## Changelog — session 24 ก.ค. 2569 (2026)
+
+สร้างเสร็จ + deploy จริง + ปรับตามฟีดแบ็กในเซสชันเดียว:
+
+1. **สร้างแอปทั้งชุด** — 4 หน้า (index/history/settings/print) + backend Apps Script + สคีมา 5 ชีต, ยกโครง api bridge/mock/SWR cache จาก `d:\APP\Car-Tracker`
+2. **ดีไซน์เอกสาร A4** — user รีวิว mockup แล้วอนุมัติ (โทนจากโลโก้บ้าน+เค้ก), เขียนหน้าพิมพ์ + `bahtText()` แปลงเลขเป็นตัวอักษรไทย (เทสต์ผ่าน Node+jsdom)
+3. **Deploy** — `clasp create-script --type sheets` สร้าง Sheet+script, deploy web app, ใส่ URL ใน api.js; สร้าง repo `lpd11/delivery-note` + เปิด GitHub Pages; user authorize สิทธิ์ Apps Script เอง (จำเป็น กดแทนไม่ได้)
+4. **แก้หน้าพิมพ์** (ฟีดแบ็ก) — สีพื้นหลังไม่พิมพ์ → `print-color-adjust:exact`; ข้อความ loading โผล่ค้าง → เพิ่มสไตล์ overlay ใน print.css
+5. **เพิ่มที่อยู่ + เลขผู้เสียภาษีบนใบเสร็จ** — ฟอร์ม (เฉพาะ receipt) + autofill ต่อร้าน + แสดงใต้ชื่อลูกค้าบนเอกสาร; backend เพิ่มคอลัมน์ + migrate ชีตเดิม
+6. **จัดตาราง** (ฟีดแบ็ก) — แถวสูงเท่ากันทุกแถว (`box-sizing` + `height` เดียว) + เส้นในสม่ำเสมอ กรอบนอก/ใต้หัว/เหนือยอดรวมเข้มขึ้น
