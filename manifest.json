@@ -1,0 +1,19 @@
+{
+  "name": "บ้านกัปตัน — ออกบิล",
+  "short_name": "บ้านกัปตัน",
+  "description": "ออกใบส่งของ / ใบเสร็จรับเงิน ขนมบ้านกัปตัน",
+  "start_url": "/delivery-note/index.html",
+  "scope": "/delivery-note/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#EAF5F1",
+  "theme_color": "#1B6B78",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

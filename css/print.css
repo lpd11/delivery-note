@@ -1,0 +1,100 @@
+/* ==========================================================================
+   บ้านกัปตัน — เอกสาร A4 (ใบส่งของ / ใบเสร็จ)  ใช้ทั้งพรีวิวบนจอ + สั่งพิมพ์
+   อ้างอิงจากดีไซน์ที่อนุมัติแล้ว
+   ========================================================================== */
+:root{
+  --p-mint:#A7E0D4;
+  --p-mint-soft:#CDEBE3;
+  --p-cream:#F4CE63;
+  --p-cream-soft:#FBEBBE;
+  --p-teal:#1B6B78;
+  --p-teal-deep:#12505A;
+  --p-ink:#173B41;
+  --p-paper:#FCFCFA;
+  --p-line:#1B6B78;
+  --p-muted:#5E7A80;
+}
+
+/* แถบเครื่องมือเหนือกระดาษ (ซ่อนตอนพิมพ์) */
+.doc-stage{background:#B9E4DA;min-height:100vh;padding:24px 14px 60px;}
+.doc-actions{
+  max-width:210mm;margin:0 auto 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;
+}
+.doc-actions .btn{font-family:inherit;font-size:15px;font-weight:700;border:0;border-radius:999px;padding:11px 20px;cursor:pointer;display:inline-flex;align-items:center;gap:7px;}
+.doc-actions .btn-print{background:var(--p-cream);color:var(--p-teal-deep);box-shadow:0 3px 10px rgba(18,60,66,.22);}
+.doc-actions .btn-back{background:#fff;color:var(--p-teal-deep);}
+.doc-actions .btn-print:hover{filter:brightness(1.05);}
+
+/* กระดาษ A4 */
+.paper{
+  background:var(--p-paper);color:var(--p-ink);
+  font-family:"Sarabun","Leelawadee UI","Noto Sans Thai","Tahoma",sans-serif;
+  width:210mm;max-width:100%;min-height:297mm;
+  margin:0 auto;padding:16mm 15mm;
+  box-shadow:0 12px 40px rgba(18,60,66,.22);border-radius:2px;
+  display:flex;flex-direction:column;
+}
+
+.doc-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;}
+.biz{display:flex;gap:14px;align-items:center;}
+.biz .logo{width:74px;height:74px;flex:0 0 auto;border-radius:16px;object-fit:contain;background:var(--p-mint);}
+.biz h1{margin:0;font-size:26px;font-weight:800;letter-spacing:.5px;color:var(--p-teal-deep);}
+.biz .tag{margin:2px 0 0;font-size:14px;color:var(--p-muted);}
+.biz .tel{margin:3px 0 0;font-size:14px;color:var(--p-ink);}
+
+.doc-meta{text-align:right;min-width:180px;}
+.doc-title{display:inline-block;font-size:22px;font-weight:800;color:#fff;background:var(--p-teal);padding:6px 16px;border-radius:8px;letter-spacing:1px;}
+.doc-meta dl{margin:14px 0 0;display:grid;grid-template-columns:auto auto;gap:4px 10px;justify-content:end;font-size:14px;}
+.doc-meta dt{color:var(--p-muted);text-align:right;}
+.doc-meta dd{margin:0;font-weight:600;font-variant-numeric:tabular-nums;}
+
+.rule{height:3px;background:var(--p-cream);border-radius:3px;margin:16px 0 14px;}
+
+.party{display:flex;gap:10px;align-items:baseline;font-size:15px;margin-bottom:14px;}
+.party .lbl{color:var(--p-muted);}
+.party .val{font-weight:700;border-bottom:1px dotted var(--p-muted);flex:1;padding-bottom:2px;}
+
+table.doc-table{width:100%;border-collapse:collapse;font-size:14px;}
+table.doc-table thead th{
+  background:var(--p-cream);color:var(--p-teal-deep);font-weight:700;
+  padding:9px 10px;border:1px solid var(--p-line);text-align:center;
+}
+table.doc-table tbody td{border:1px solid rgba(27,107,120,.55);padding:8px 10px;vertical-align:top;}
+table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.18);}
+.c-no{width:44px;text-align:center;color:var(--p-muted);}
+.c-qty{width:70px;text-align:center;font-variant-numeric:tabular-nums;}
+.c-price,.c-amt{width:110px;text-align:right;font-variant-numeric:tabular-nums;}
+.empty-cell td{height:34px;}
+
+.totrow td{border:1px solid var(--p-line);padding:10px;font-weight:800;font-size:16px;}
+.totrow .tot-words{text-align:right;background:var(--p-mint-soft);font-weight:700;font-size:14px;color:var(--p-teal-deep);}
+.totrow .tot-label{text-align:right;background:var(--p-mint-soft);}
+.totrow .tot-amt{text-align:right;background:var(--p-cream-soft);color:var(--p-teal-deep);font-variant-numeric:tabular-nums;}
+
+.signs{display:flex;gap:40px;justify-content:space-between;margin-top:28px;}
+.signs.signs-single{justify-content:flex-end;}
+.sign{width:230px;text-align:center;}
+.sign .line{border-bottom:1px dotted var(--p-ink);height:34px;margin-bottom:6px;}
+.sign .role{font-weight:700;font-size:14px;}
+.sign .paren{font-size:13px;color:var(--p-muted);}
+.sign .date{font-size:12px;color:var(--p-muted);margin-top:4px;}
+
+.foot-note{margin-top:22px;text-align:center;font-size:12px;color:var(--p-muted);}
+
+/* ความต่างของ 2 ประเภทเอกสาร เรนเดอร์ด้วย JS (print.js) ไม่ใช้ CSS toggle
+   เพื่อเลี่ยงปัญหา display:block ทับ display:flex ของ .signs */
+
+@media (max-width:520px){
+  .paper{padding:22px 16px;}
+  .biz h1{font-size:22px;}
+  .doc-title{font-size:18px;}
+  .signs{flex-direction:column;gap:26px;align-items:stretch;}
+  .sign{width:auto;}
+}
+
+@media print{
+  .doc-stage{background:#fff;padding:0;min-height:auto;}
+  .doc-actions{display:none;}
+  .paper{box-shadow:none;width:auto;min-height:auto;padding:12mm 10mm;border-radius:0;}
+  @page{size:A4;margin:0;}
+}

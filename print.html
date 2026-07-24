@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>บ้านกัปตัน — เอกสาร</title>
+  <meta name="theme-color" content="#B9E4DA">
+  <link rel="icon" href="icon.svg">
+  <link rel="stylesheet" href="css/print.css">
+</head>
+<body>
+  <div class="doc-stage" id="doc-stage" data-doc="delivery">
+    <div class="doc-actions">
+      <a class="btn btn-back" href="history.html">‹ ประวัติ</a>
+      <a class="btn btn-back" href="index.html">+ ออกบิลใหม่</a>
+      <button type="button" class="btn btn-print" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
+    </div>
+
+    <div class="paper" id="paper">
+      <div class="doc-head">
+        <div class="biz">
+          <img class="logo" id="biz-logo" src="icon.svg" alt="โลโก้">
+          <div>
+            <h1 id="biz-name">บ้านกัปตัน</h1>
+            <p class="tag" id="biz-tag">ขนมโฮมเมด · เบเกอรี่</p>
+            <p class="tel" id="biz-tel">โทร. -</p>
+          </div>
+        </div>
+        <div class="doc-meta">
+          <span class="doc-title" id="doc-title">ใบส่งของ</span>
+          <dl>
+            <dt>เลขที่</dt><dd id="doc-no">-</dd>
+            <dt>วันที่</dt><dd id="doc-date">-</dd>
+          </dl>
+        </div>
+      </div>
+
+      <div class="rule"></div>
+
+      <div class="party">
+        <span class="lbl" id="party-label">ส่งให้ร้าน</span>
+        <span class="val" id="party-shop">-</span>
+      </div>
+
+      <table class="doc-table">
+        <thead>
+          <tr>
+            <th class="c-no">ที่</th>
+            <th>รายการ</th>
+            <th class="c-qty">จำนวน</th>
+            <th class="c-price">ราคา/หน่วย</th>
+            <th class="c-amt">จำนวนเงิน</th>
+          </tr>
+        </thead>
+        <tbody id="doc-items"></tbody>
+        <tfoot>
+          <tr class="totrow">
+            <td class="tot-words" colspan="2" id="tot-words"></td>
+            <td class="tot-label" colspan="2">รวมทั้งสิ้น (บาท)</td>
+            <td class="tot-amt" id="tot-amt">0.00</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="signs" id="signs"></div>
+
+      <div class="foot-note">ขอบคุณที่อุดหนุนขนมบ้านกัปตัน 🧡</div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/print.js"></script>
+</body>
+</html>
