@@ -44,9 +44,9 @@ manifest.json   sw.js — PWA
 | ชีต | คอลัมน์ |
 |---|---|
 | `Settings`  | storeName, tagline, phone, logoBase64  *(แถวเดียว)* |
-| `Shops`     | shopId, name, phone, address, createdAt |
+| `Shops`     | shopId, name, phone, address, taxId, createdAt |
 | `Products`  | productId, name, defaultPrice |
-| `Bills`     | billId, docType, date, shopId, shopName, totalAmount, itemCount, createdAt |
+| `Bills`     | billId, docType, date, shopId, shopName, shopAddress, shopTaxId, totalAmount, itemCount, createdAt |
 | `BillItems` | billId, lineNo, productName, qty, unitPrice, amount |
 
 - `docType` = `delivery` (ใบส่งของ) / `receipt` (ใบเสร็จ)
