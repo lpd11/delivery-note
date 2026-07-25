@@ -29,6 +29,13 @@
 .doc-actions .btn-back{background:#fff;color:var(--p-teal-deep);}
 .doc-actions .btn-print:hover{filter:brightness(1.05);}
 
+/* ปุ่มเลือกขนาด A4/A5 */
+.size-toggle{display:inline-flex;background:rgba(18,60,66,.12);border-radius:999px;padding:4px;gap:2px;}
+.size-toggle button{border:0;background:transparent;cursor:pointer;font-family:inherit;font-size:14px;font-weight:700;color:var(--p-teal-deep);padding:8px 14px;border-radius:999px;transition:all .15s ease;}
+.size-toggle button.active{background:var(--p-teal);color:#fff;box-shadow:0 2px 6px rgba(18,60,66,.22);}
+.size-hint{max-width:210mm;margin:0 auto 16px;text-align:center;font-size:13px;font-weight:600;color:var(--p-teal-deep);background:rgba(244,206,99,.4);border:1px solid var(--p-cream);border-radius:10px;padding:9px 14px;}
+.size-hint:empty{display:none;}
+
 /* กระดาษ A4 */
 .paper{
   background:var(--p-paper);color:var(--p-ink);
@@ -126,9 +133,10 @@ table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
 
 @media print{
   .doc-stage{background:#fff;padding:0;min-height:auto;overflow:visible;}
-  .doc-actions{display:none;}
+  .doc-actions,.size-hint{display:none;}
   .loading-overlay{display:none!important;}
-  /* ตอนพิมพ์ยกเลิกการย่อ (fitPaper) กลับเป็น A4 เต็ม */
-  .paper{box-shadow:none;width:auto;min-height:auto;padding:12mm 10mm;border-radius:0;zoom:1!important;}
-  @page{size:A4;margin:0;}
+  /* ตอนพิมพ์ยกเลิกการย่อ (fitPaper) กลับเป็น A4 เต็ม (ขนาดกระดาษกำหนดที่ #page-style) */
+  .paper{box-shadow:none;width:210mm;min-height:auto;padding:12mm 10mm;border-radius:0;margin:0 auto;zoom:1!important;}
+  /* A5: ย่อ A4 ~0.707 เท่า (=A5 พอดี) ชิดซ้ายบนของ A4 แนวนอน ครึ่งขวาเว้นว่างไว้ตัดกลาง */
+  body.size-a5 .paper{zoom:0.707!important;margin:0!important;}
 }

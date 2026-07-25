@@ -7,14 +7,20 @@
   <meta name="theme-color" content="#B9E4DA">
   <link rel="icon" href="icon.svg">
   <link rel="stylesheet" href="css/print.css">
+  <style id="page-style">@page{size:A4;margin:0;}</style>
 </head>
 <body>
   <div class="doc-stage" id="doc-stage" data-doc="delivery">
     <div class="doc-actions">
       <a class="btn btn-back" href="history.html">‹ ประวัติ</a>
       <a class="btn btn-back" href="index.html">+ ออกบิลใหม่</a>
+      <div class="size-toggle" id="size-toggle">
+        <button type="button" data-size="a4" class="active">A4 เต็มแผ่น</button>
+        <button type="button" data-size="a5">A5 ครึ่งแผ่น</button>
+      </div>
       <button type="button" class="btn btn-print" onclick="window.print()">🖨️ พิมพ์ / บันทึก PDF</button>
     </div>
+    <p class="size-hint" id="size-hint"></p>
 
     <div class="paper" id="paper">
       <div class="doc-head">

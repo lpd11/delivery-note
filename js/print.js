@@ -2,10 +2,40 @@
  * บ้านกัปตัน — หน้าพิมพ์ A4 (print.html)
  * ดึงบิล + ตั้งค่าหัวบิล แล้วเรนเดอร์ตามประเภท (ใบส่งของ / ใบเสร็จ)
  */
-document.addEventListener('DOMContentLoaded', render);
+document.addEventListener('DOMContentLoaded', () => { initSize(); render(); });
 
 // จำนวนแถวขั้นต่ำในตาราง (เติมแถวว่างให้ใบดูเต็ม)
 const MIN_ROWS = 6;
+
+// ==========================================
+// เลือกขนาดพิมพ์ A4 (เต็มแผ่น) / A5 (ครึ่งแผ่นบน A4 แนวนอน)
+// ==========================================
+function initSize() {
+  const saved = localStorage.getItem('bk_paper_size') || 'a4';
+  document.getElementById('size-toggle').addEventListener('click', (e) => {
+    const btn = e.target.closest('button');
+    if (btn) applySize(btn.dataset.size);
+  });
+  applySize(saved);
+}
+
+function applySize(size) {
+  if (size !== 'a5') size = 'a4';
+  localStorage.setItem('bk_paper_size', size);
+  document.body.classList.toggle('size-a5', size === 'a5');
+  document.querySelectorAll('#size-toggle button').forEach(b => b.classList.toggle('active', b.dataset.size === size));
+
+  // เปลี่ยนขนาด/แนวกระดาษของการพิมพ์: A5 = A4 แนวนอน (ไว้พิมพ์ครึ่งซ้ายแล้วตัดกลาง)
+  document.getElementById('page-style').textContent = (size === 'a5')
+    ? '@page{size:A4 landscape;margin:0;}'
+    : '@page{size:A4;margin:0;}';
+
+  document.getElementById('size-hint').textContent = (size === 'a5')
+    ? 'A5: พิมพ์ลงกระดาษ A4 “แนวนอน” บิลจะอยู่ครึ่งซ้าย ตัดกลางได้ใบเล็กพอดี (ในหน้าต่างพิมพ์เลือกแนวนอน/Landscape ถ้าไม่เปลี่ยนเอง)'
+    : '';
+
+  fitPaper();
+}
 
 async function render() {
   const billId = getUrlParam('billId');
