@@ -16,12 +16,27 @@ async function render() {
     const [{ bill, items }, settings] = await Promise.all([getBill(billId), getSettings().catch(() => null)]);
     applySettings(settings);
     applyBill(bill, items);
+    fitPaper();
   } catch (e) {
     document.getElementById('party-shop').textContent = 'โหลดบิลไม่สำเร็จ: ' + e.message;
   } finally {
     hideLoading();
   }
 }
+
+/** ย่อกระดาษ A4 (210mm) ให้พอดีความกว้างจอมือถือ — พรีวิวเหมือน PDF ทั้งหน้า ไม่ตัดคำ/ล้นขอบ */
+function fitPaper() {
+  const paper = document.getElementById('paper');
+  const stage = document.querySelector('.doc-stage');
+  if (!paper || !stage) return;
+  paper.style.zoom = '1';
+  const cs = getComputedStyle(stage);
+  const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight);
+  const avail = stage.clientWidth - padX;
+  const pw = paper.offsetWidth; // ความกว้าง A4 จริง (~794px)
+  if (pw > avail + 1) paper.style.zoom = avail / pw;
+}
+window.addEventListener('resize', fitPaper);
 
 function applySettings(s) {
   if (!s) return;

@@ -20,7 +20,7 @@
 .doc-stage *{box-sizing:border-box;}
 
 /* แถบเครื่องมือเหนือกระดาษ (ซ่อนตอนพิมพ์) */
-.doc-stage{background:#B9E4DA;min-height:100vh;padding:24px 14px 60px;}
+.doc-stage{background:#B9E4DA;min-height:100vh;padding:24px 14px 60px;overflow-x:hidden;}
 .doc-actions{
   max-width:210mm;margin:0 auto 18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;
 }
@@ -33,7 +33,7 @@
 .paper{
   background:var(--p-paper);color:var(--p-ink);
   font-family:"Sarabun","Leelawadee UI","Noto Sans Thai","Tahoma",sans-serif;
-  width:210mm;max-width:100%;min-height:297mm;
+  width:210mm;min-height:297mm;   /* คงขนาด A4 จริง แล้วย่อทั้งหน้าให้พอดีจอด้วย JS (fitPaper) */
   margin:0 auto;padding:16mm 15mm;
   box-shadow:0 12px 40px rgba(18,60,66,.22);border-radius:2px;
   display:flex;flex-direction:column;
@@ -105,13 +105,6 @@ table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
 /* ความต่างของ 2 ประเภทเอกสาร เรนเดอร์ด้วย JS (print.js) ไม่ใช้ CSS toggle
    เพื่อเลี่ยงปัญหา display:block ทับ display:flex ของ .signs */
 
-@media (max-width:520px){
-  .paper{padding:22px 16px;}
-  .biz h1{font-size:22px;}
-  .doc-title{font-size:18px;}
-  .signs{flex-direction:column;gap:26px;align-items:stretch;}
-  .sign{width:auto;}
-}
 
 /* กล่องโหลด (สร้างจาก app.js) — ต้องมีสไตล์เพราะหน้านี้ไม่ได้โหลด style.css
    ไม่งั้นจะโผล่เป็นข้อความ "กำลังเตรียมเอกสาร..." ค้างบนหน้า */
@@ -132,9 +125,10 @@ table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
 /* คงตัวหมุนไว้แม้เปิด reduce motion (เป็น feedback ที่จำเป็น) */
 
 @media print{
-  .doc-stage{background:#fff;padding:0;min-height:auto;}
+  .doc-stage{background:#fff;padding:0;min-height:auto;overflow:visible;}
   .doc-actions{display:none;}
   .loading-overlay{display:none!important;}
-  .paper{box-shadow:none;width:auto;min-height:auto;padding:12mm 10mm;border-radius:0;}
+  /* ตอนพิมพ์ยกเลิกการย่อ (fitPaper) กลับเป็น A4 เต็ม */
+  .paper{box-shadow:none;width:auto;min-height:auto;padding:12mm 10mm;border-radius:0;zoom:1!important;}
   @page{size:A4;margin:0;}
 }

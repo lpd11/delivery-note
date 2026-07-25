@@ -54,35 +54,45 @@ function invalidateBillsCache() {
 async function apiRequest(action, method = 'GET', silent = false) {
   if (isMockMode) return await mockApiRequest(action, method);
 
-  try {
-    let url = API_URL;
-    const options = {
-      method,
-      headers: { 'Content-Type': 'text/plain' } // เลี่ยง CORS preflight ของ Apps Script
-    };
+  let url = API_URL;
+  const options = {
+    method,
+    headers: { 'Content-Type': 'text/plain' } // เลี่ยง CORS preflight ของ Apps Script
+  };
 
-    if (method === 'GET') {
-      const clean = {};
-      for (const k in action) {
-        const v = action[k];
-        if (v !== undefined && v !== null && v !== '') clean[k] = v;
-      }
-      clean._t = Date.now();
-      url = `${API_URL}?${new URLSearchParams(clean).toString()}`;
-    } else {
-      options.body = JSON.stringify(action);
+  if (method === 'GET') {
+    const clean = {};
+    for (const k in action) {
+      const v = action[k];
+      if (v !== undefined && v !== null && v !== '') clean[k] = v;
     }
-
-    const res = await fetch(url, options);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = await res.json();
-    if (!json.success) throw new Error(json.error || 'Unknown API Error');
-    return json.data;
-  } catch (err) {
-    console.error('API Call Failed:', err);
-    if (!silent) alert('เชื่อมต่อฐานข้อมูลล้มเหลว: ' + err.message);
-    throw err;
+    clean._t = Date.now();
+    url = `${API_URL}?${new URLSearchParams(clean).toString()}`;
+  } else {
+    options.body = JSON.stringify(action);
   }
+
+  // GET เป็น idempotent → retry ได้ (กัน cold start ของ Apps Script ที่ครั้งแรกมักพลาด HTTP 404/5xx)
+  // POST (บันทึกบิล) ไม่ retry เพื่อกันบันทึกซ้ำ
+  const maxAttempts = method === 'GET' ? 3 : 1;
+  let lastErr;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const res = await fetch(url, options);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Unknown API Error');
+      return json.data;
+    } catch (err) {
+      lastErr = err;
+      if (attempt < maxAttempts) {
+        await new Promise(r => setTimeout(r, 700 * attempt)); // หน่วง 0.7s, 1.4s แล้วลองใหม่
+      }
+    }
+  }
+  console.error('API Call Failed:', lastErr);
+  if (!silent) alert('เชื่อมต่อฐานข้อมูลล้มเหลว: ' + lastErr.message);
+  throw lastErr;
 }
 
 // ==========================================
