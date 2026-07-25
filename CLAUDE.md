@@ -105,21 +105,22 @@ repo เดียวกับที่ตั้ง Pages ไว้ (`lpd11.githu
 - **แก้สคีมา Sheet:** เพิ่มคอลัมน์ใหม่ใน `HEADERS` แล้ว `sheet_()` จะ `ensureColumns_()` ต่อท้ายให้ชีตเดิมอัตโนมัติ; การเขียนแถวใช้ `appendByHeader_()` (จับคู่ตาม header ไม่พึ่งลำดับคอลัมน์) — **อย่าใช้ `appendRow([...])` แบบ positional** เพราะสคีมา migrate แล้วลำดับจะเพี้ยน
 - manifest ใช้ไอคอน SVG — ใช้ Add to Home Screen ได้ ถ้าอยากให้ install prompt เต็มรูปแบบ ค่อยเพิ่ม PNG 192/512
 
-## สถานะ (24 ก.ค. 2569 / 2026) — DEPLOY แล้ว ✅
+## สถานะ (25 ก.ค. 2569 / 2026) — DEPLOY แล้ว ใช้งานจริงอยู่ ✅
 
-- [x] Frontend ครบ 4 หน้า + พิมพ์ A4 2 ประเภท + bahtText ภาษาไทย
-- [x] Backend `Code.gs` + สคีมา 5 ชีต
-- [x] ทดสอบ mock mode ผ่าน (บันทึก/อ่าน/ลบ/upsert/คำนวณ/เรนเดอร์เอกสาร) ด้วย Node+jsdom
-- [x] **Deploy backend จริง** — Apps Script bound Sheet + web app (URL อยู่ใน js/api.js), user authorize แล้ว, endpoint ตอบสด
+- [x] Frontend ครบ 4 หน้า + พิมพ์ A4/A5 2 ประเภท + bahtText ภาษาไทย
+- [x] Backend `Code.gs` + สคีมา 5 ชีต + แก้ไข/ยกเลิก/กู้คืนบิล
+- [x] ทดสอบ mock mode ผ่าน (สร้าง/แก้ไข/ยกเลิก/กู้คืน/upsert/คำนวณ/เรนเดอร์เอกสาร) ด้วย Node
+- [x] **Deploy backend จริง** — deployment เดิม redeploy เป็น `@3` (25 ก.ค.), ยิง `getBills` สดผ่าน, บิลเก่าอ่านเป็น `status:active` ถูกต้อง
 - [x] **Deploy GitHub Pages** → https://lpd11.github.io/delivery-note/
-- [ ] ทดสอบ saveBill สด (บิลจริงใบแรกเป็นตัวยืนยัน — เลี่ยงกินเลข 6907-001)
+- [x] ใช้งานจริงแล้ว — มีบิลจริงในระบบ (6907-001, 6907-002)
 - [ ] ใส่โลโก้จริงของร้าน (ตอนนี้ใช้ไอคอนบ้าน+เค้กชั่วคราว) — อัปโหลดผ่านหน้า "ตั้งค่า"
+- [ ] ยังไม่มีใครทดลองกด "แก้ไข/ยกเลิก" กับบิลจริง — ฟีเจอร์เพิ่งขึ้น 25 ก.ค. (เทสต์แค่ mock)
 
 ### Resource IDs (บัญชี eliang11@gmail.com)
 - Repo: `lpd11/delivery-note` (GitHub Pages: main /)
 - Apps Script scriptId: `1j4G5g40eXkcf9-QvH7MZJKH5roqIFgkN4JiCwdA5_08Zbh11gSo-x1uO`
 - Spreadsheet (DB): `1MJpgMKxYYIw3eSnUoLGeZgaEwqP5hCqtu_QDySaFonE`
-- Web app deployment: `AKfycbxs1CmzcF-LkkAy1JnwZ0ysVWGoogZ6n7g6cDdvXMUXcGJyKG62G-Eh2RkTh0fAVbzw`
+- Web app deployment: `AKfycbxs1CmzcF-LkkAy1JnwZ0ysVWGoogZ6n7g6cDdvXMUXcGJyKG62G-Eh2RkTh0fAVbzw` (เวอร์ชันล่าสุด `@3`)
 - redeploy backend: `clasp push --force` + `clasp create-deployment -i <deployment>` (redeploy ทับตัวเดิม — อย่าสร้างใหม่ URL จะเปลี่ยน)
 - redeploy frontend: `git push origin main` → GitHub Pages build เอง ~1-2 นาที (ถ้าแก้ asset ให้ bump `CACHE` ใน `sw.js`)
 - **`.clasp.json`/`.claspignore` ถูก gitignore** (ไม่ push ขึ้น repo) — เก็บไว้ในเครื่องสำหรับ clasp; `.claspignore` ตั้งให้ push เฉพาะ `Code.gs`+`appsscript.json` ไม่เอาไฟล์ frontend ขึ้น Apps Script
