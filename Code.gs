@@ -36,6 +36,9 @@ function doPost(e) {
       case 'saveSettings': return saveSettings_(body.data);
       case 'addShop':      return addShop_(body.data);
       case 'saveBill':     return saveBill_(body.data);
+      case 'updateBill':   return updateBill_(body.data);
+      case 'voidBill':     return voidBill_(body.billId);
+      case 'unvoidBill':   return unvoidBill_(body.billId);
       case 'deleteBill':   return deleteBill_(body.billId);
       default: throw new Error('Invalid POST action: ' + body.action);
     }
@@ -57,7 +60,7 @@ const HEADERS = {
   'Settings':  ['storeName', 'tagline', 'phone', 'logoBase64'],
   'Shops':     ['shopId', 'name', 'phone', 'address', 'taxId', 'createdAt'],
   'Products':  ['productId', 'name', 'defaultPrice'],
-  'Bills':     ['billId', 'docType', 'date', 'shopId', 'shopName', 'shopAddress', 'shopTaxId', 'totalAmount', 'itemCount', 'createdAt'],
+  'Bills':     ['billId', 'docType', 'date', 'shopId', 'shopName', 'shopAddress', 'shopTaxId', 'totalAmount', 'itemCount', 'createdAt', 'status', 'voidedAt', 'updatedAt'],
   'BillItems': ['billId', 'lineNo', 'productName', 'qty', 'unitPrice', 'amount']
 };
 
@@ -93,6 +96,15 @@ function appendByHeader_(sh, obj) {
   const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
   const row = headers.map(h => (obj[h] !== undefined && obj[h] !== null) ? obj[h] : '');
   sh.appendRow(row);
+}
+
+/** เขียนทับค่าในแถวเดิมโดยจับคู่ตาม header (ข้าม key ที่ไม่มีคอลัมน์) */
+function setByHeader_(sh, rowNum, obj) {
+  const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+  Object.keys(obj).forEach(k => {
+    const col = headers.indexOf(k) + 1;
+    if (col > 0) sh.getRange(rowNum, col).setValue(obj[k]);
+  });
 }
 
 function rows_(sh) {
@@ -225,22 +237,76 @@ function saveBill_(data) {
   appendByHeader_(sheet_('Bills'), {
     billId: billId, docType: data.docType || 'delivery', date: data.date || '', shopId: shopId,
     shopName: data.shopName || '', shopAddress: data.shopAddress || '', shopTaxId: data.shopTaxId || '',
-    totalAmount: total, itemCount: items.length, createdAt: new Date()
+    totalAmount: total, itemCount: items.length, createdAt: new Date(), status: 'active'
   });
 
+  writeBillItems_(billId, items);
+
+  return { billId: billId };
+}
+
+/** ลบรายการเดิมของบิลแล้วเขียนใหม่ทั้งชุด (ใช้ทั้งตอนสร้างและตอนแก้ไข) */
+function writeBillItems_(billId, items) {
   const itemSheet = sheet_('BillItems');
+  rows_(itemSheet).filter(r => String(r.billId) === String(billId))
+    .sort((a, b) => b._rowNum - a._rowNum)
+    .forEach(r => itemSheet.deleteRow(r._rowNum));
   items.forEach((it, idx) => {
     appendByHeader_(itemSheet, { billId: billId, lineNo: idx + 1, productName: it.productName, qty: Number(it.qty) || 0, unitPrice: Number(it.unitPrice) || 0, amount: Number(it.amount) || 0 });
   });
+}
+
+/** แก้ไขบิลเดิม — คงเลขบิลไว้ (ไม่กินเลขใหม่) บิลที่ยกเลิกแล้วแก้ไม่ได้ */
+function updateBill_(data) {
+  const billId = String(data.billId || '');
+  const items = data.items || [];
+  const bSheet = sheet_('Bills');
+  const bill = rows_(bSheet).find(r => String(r.billId) === billId);
+  if (!bill) throw new Error('ไม่พบบิล ' + billId);
+  if (String(bill.status) === 'voided') throw new Error('บิล ' + billId + ' ถูกยกเลิกแล้ว แก้ไขไม่ได้');
+
+  let shopId = bill.shopId || '';
+  if (data.shopName) {
+    shopId = upsertShop_({ name: data.shopName, address: data.shopAddress, taxId: data.shopTaxId }).shopId;
+  }
+  upsertProducts_(items);
+
+  const total = items.reduce((s, it) => s + (Number(it.amount) || 0), 0);
+  setByHeader_(bSheet, bill._rowNum, {
+    docType: data.docType || 'delivery', date: data.date || '', shopId: shopId,
+    shopName: data.shopName || '', shopAddress: data.shopAddress || '', shopTaxId: data.shopTaxId || '',
+    totalAmount: total, itemCount: items.length, updatedAt: new Date()
+  });
+
+  writeBillItems_(billId, items);
 
   return { billId: billId };
+}
+
+/** ยกเลิกบิล — เก็บแถวไว้ (เลขบิลไม่หาย ตรวจย้อนหลังได้) แค่ติดสถานะ voided */
+function voidBill_(billId) {
+  const bSheet = sheet_('Bills');
+  const bill = rows_(bSheet).find(r => String(r.billId) === String(billId));
+  if (!bill) throw new Error('ไม่พบบิล ' + billId);
+  setByHeader_(bSheet, bill._rowNum, { status: 'voided', voidedAt: new Date() });
+  return { success: true, billId: billId };
+}
+
+/** กู้บิลที่เผลอกดยกเลิกกลับมา */
+function unvoidBill_(billId) {
+  const bSheet = sheet_('Bills');
+  const bill = rows_(bSheet).find(r => String(r.billId) === String(billId));
+  if (!bill) throw new Error('ไม่พบบิล ' + billId);
+  setByHeader_(bSheet, bill._rowNum, { status: 'active', voidedAt: '' });
+  return { success: true, billId: billId };
 }
 
 function getBills_() {
   return rows_(sheet_('Bills')).map(r => ({
     billId: r.billId, docType: r.docType, date: dateStr_(r.date),
     shopName: r.shopName, totalAmount: Number(r.totalAmount) || 0,
-    itemCount: Number(r.itemCount) || 0, createdAt: r.createdAt
+    itemCount: Number(r.itemCount) || 0, createdAt: r.createdAt,
+    status: r.status === 'voided' ? 'voided' : 'active'   // แถวเก่าที่ยังไม่มีคอลัมน์ = active
   })).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 }
 
@@ -255,7 +321,8 @@ function getBill_(billId) {
     bill: {
       billId: bill.billId, docType: bill.docType, date: dateStr_(bill.date),
       shopName: bill.shopName, shopAddress: bill.shopAddress || '', shopTaxId: bill.shopTaxId || '',
-      totalAmount: Number(bill.totalAmount) || 0
+      totalAmount: Number(bill.totalAmount) || 0,
+      status: bill.status === 'voided' ? 'voided' : 'active'
     },
     items: items
   };

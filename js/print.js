@@ -48,12 +48,20 @@ function applySize(size) {
   // A4 และ A5 ใช้กระดาษ "แนวตั้ง" เหมือนกัน (ไม่ต้องหมุน!) — A5 แค่ย่อบิลเป็นแนวนอนไว้ครึ่งบน
   document.getElementById('page-style').textContent = '@page{size:A4;margin:0;}';
 
-  document.getElementById('size-hint').textContent = (size === 'a5')
-    ? 'A5: พิมพ์กระดาษ A4 แนวตั้งตามปกติ (ไม่ต้องหมุน) บิลจะอยู่ครึ่งบน — ตัดตามเส้นแนวนอนได้ใบเล็ก'
-    : '';
+  updateHint();
 
   fillItems();  // ปรับจำนวนแถวว่างให้พอดีขนาด
   fitPaper();
+}
+
+const VOID_HINT = 'บิลนี้ถูกยกเลิกแล้ว — พิมพ์ไม่ได้ (กู้คืนได้ที่หน้าประวัติ)';
+const A5_HINT = 'A5: พิมพ์กระดาษ A4 แนวตั้งตามปกติ (ไม่ต้องหมุน) บิลจะอยู่ครึ่งบน — ตัดตามเส้นแนวนอนได้ใบเล็ก';
+
+/** ข้อความใต้ปุ่ม: บิลยกเลิกสำคัญกว่าคำอธิบายขนาดกระดาษ */
+function updateHint() {
+  const voided = document.body.classList.contains('bill-voided');
+  const a5 = document.body.classList.contains('size-a5');
+  document.getElementById('size-hint').textContent = voided ? VOID_HINT : (a5 ? A5_HINT : '');
 }
 
 async function render() {
@@ -128,6 +136,22 @@ function applyBill(bill, items) {
 
   // ช่องเซ็น
   document.getElementById('signs').innerHTML = isReceipt ? signsReceipt() : signsDelivery();
+
+  // บิลที่ยกเลิกแล้ว: ดูย้อนหลังได้ แต่ประทับตรา "ยกเลิก" และพิมพ์ไม่ได้
+  applyVoided(bill.status === 'voided');
+}
+
+function applyVoided(isVoided) {
+  document.body.classList.toggle('bill-voided', isVoided);
+  const paper = document.getElementById('paper');
+  const old = paper.querySelector('.void-stamp');
+  if (old) old.remove();
+  if (!isVoided) return;
+  const stamp = document.createElement('div');
+  stamp.className = 'void-stamp';
+  stamp.textContent = 'ยกเลิก';
+  paper.appendChild(stamp);
+  updateHint();
 }
 
 function signBox(role) {

@@ -41,6 +41,7 @@
   background:var(--p-paper);color:var(--p-ink);
   font-family:"Sarabun","Leelawadee UI","Noto Sans Thai","Tahoma",sans-serif;
   width:210mm;min-height:297mm;   /* คงขนาด A4 จริง แล้วย่อทั้งหน้าให้พอดีจอด้วย JS (fitPaper) */
+  position:relative;              /* ยึดตราประทับ "ยกเลิก" */
   margin:0 auto;padding:16mm 15mm;
   box-shadow:0 12px 40px rgba(18,60,66,.22);border-radius:2px;
   display:flex;flex-direction:column;
@@ -131,6 +132,21 @@ table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
 .loading-text{color:var(--p-teal-deep);font-weight:600;}
 @keyframes spin{to{transform:rotate(360deg);}}
 /* คงตัวหมุนไว้แม้เปิด reduce motion (เป็น feedback ที่จำเป็น) */
+
+/* ==========================================================================
+   บิลที่ถูกยกเลิก — ดูย้อนหลังได้ แต่ประทับตราแดงและซ่อนปุ่มพิมพ์
+   ========================================================================== */
+.void-stamp{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-16deg);
+  font-size:96px;font-weight:800;letter-spacing:12px;
+  color:rgba(199,80,63,.30);border:8px solid rgba(199,80,63,.30);
+  border-radius:18px;padding:10px 40px 16px;
+  pointer-events:none;white-space:nowrap;
+}
+body.size-a5 .void-stamp{font-size:56px;letter-spacing:8px;border-width:5px;padding:6px 26px 10px;}
+body.bill-voided .btn-print{display:none;}
+body.bill-voided .size-hint{background:#fdf1ee;border-color:#f0cdc4;color:#C7503F;}
 
 /* ==========================================================================
    A5 แนวนอน = บิลย่อเตี้ยลงพอดี "ครึ่งบน" ของ A4 แนวตั้ง (ไม่ต้องหมุนกระดาษ)

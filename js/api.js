@@ -109,6 +109,9 @@ async function getProducts()         { return apiRequest({ action: 'getProducts'
 async function getBills(silent)      { return apiRequest({ action: 'getBills' }, 'GET', silent); }
 async function getBill(billId)       { return apiRequest({ action: 'getBill', billId }); }
 async function saveBill(data)        { return apiRequest({ action: 'saveBill', data }, 'POST'); }
+async function updateBill(data)      { return apiRequest({ action: 'updateBill', data }, 'POST'); }
+async function voidBill(billId)      { return apiRequest({ action: 'voidBill', billId }, 'POST'); }
+async function unvoidBill(billId)    { return apiRequest({ action: 'unvoidBill', billId }, 'POST'); }
 async function deleteBill(billId)    { return apiRequest({ action: 'deleteBill', billId }, 'POST'); }
 
 // ==========================================
@@ -174,13 +177,14 @@ async function mockApiRequest(action, method) {
       return get('mock_products');
 
     case 'getBills': {
-      const bills = get('mock_bills');
-      return [...bills].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const bills = get('mock_bills').map(b => ({ ...b, status: b.status === 'voided' ? 'voided' : 'active' }));
+      return bills.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     }
 
     case 'getBill': {
-      const bill = get('mock_bills').find(b => b.billId === action.billId);
-      if (!bill) throw new Error('ไม่พบบิล');
+      const found = get('mock_bills').find(b => b.billId === action.billId);
+      if (!found) throw new Error('ไม่พบบิล');
+      const bill = { ...found, status: found.status === 'voided' ? 'voided' : 'active' };
       const items = get('mock_bill_items').filter(i => i.billId === action.billId)
         .sort((a, b) => a.lineNo - b.lineNo);
       return { bill, items };
@@ -226,7 +230,7 @@ async function mockApiRequest(action, method) {
       bills.push({
         billId, docType: d.docType || 'delivery', date: d.date,
         shopId, shopName: d.shopName || '', shopAddress: d.shopAddress || '', shopTaxId: d.shopTaxId || '',
-        totalAmount: total, itemCount: (d.items || []).length, createdAt: now.toISOString()
+        totalAmount: total, itemCount: (d.items || []).length, createdAt: now.toISOString(), status: 'active'
       });
       set('mock_bills', bills);
 
@@ -239,6 +243,67 @@ async function mockApiRequest(action, method) {
       set('mock_bill_items', billItems);
 
       return { billId };
+    }
+
+    case 'updateBill': {
+      const d = action.data;
+      const bills = get('mock_bills');
+      const bill = bills.find(b => b.billId === d.billId);
+      if (!bill) throw new Error('ไม่พบบิล ' + d.billId);
+      if (bill.status === 'voided') throw new Error('บิล ' + d.billId + ' ถูกยกเลิกแล้ว แก้ไขไม่ได้');
+
+      // จำร้าน/ที่อยู่/เลขภาษี + ราคาสินค้าล่าสุด เหมือนตอนสร้างบิล
+      const shops = get('mock_shops');
+      if (d.shopName) {
+        const nm = d.shopName.trim();
+        let sh = shops.find(s => s.name.trim() === nm);
+        if (!sh) { sh = { shopId: 'SH-' + Date.now(), name: nm, phone: '', address: '', taxId: '' }; shops.push(sh); }
+        if (d.shopAddress) sh.address = d.shopAddress;
+        if (d.shopTaxId) sh.taxId = d.shopTaxId;
+        bill.shopId = sh.shopId;
+        set('mock_shops', shops);
+      }
+      const products = get('mock_products');
+      (d.items || []).forEach(it => {
+        if (!it.productName) return;
+        const p = products.find(x => x.name.trim() === it.productName.trim());
+        if (p) { p.defaultPrice = Number(it.unitPrice) || p.defaultPrice; }
+        else { products.push({ productId: 'PD-' + Date.now() + Math.floor(Math.random() * 999), name: it.productName.trim(), defaultPrice: Number(it.unitPrice) || 0 }); }
+      });
+      set('mock_products', products);
+
+      bill.docType = d.docType || 'delivery';
+      bill.date = d.date;
+      bill.shopName = d.shopName || '';
+      bill.shopAddress = d.shopAddress || '';
+      bill.shopTaxId = d.shopTaxId || '';
+      bill.totalAmount = (d.items || []).reduce((s, it) => s + (Number(it.amount) || 0), 0);
+      bill.itemCount = (d.items || []).length;
+      bill.updatedAt = new Date().toISOString();
+      set('mock_bills', bills);
+
+      // เขียนรายการใหม่ทั้งชุด (ลบของเดิมก่อน)
+      const kept = get('mock_bill_items').filter(i => i.billId !== d.billId);
+      (d.items || []).forEach((it, idx) => {
+        kept.push({
+          billId: d.billId, lineNo: idx + 1, productName: it.productName,
+          qty: Number(it.qty) || 0, unitPrice: Number(it.unitPrice) || 0, amount: Number(it.amount) || 0
+        });
+      });
+      set('mock_bill_items', kept);
+
+      return { billId: d.billId };
+    }
+
+    case 'voidBill':
+    case 'unvoidBill': {
+      const bills = get('mock_bills');
+      const bill = bills.find(b => b.billId === action.billId);
+      if (!bill) throw new Error('ไม่พบบิล ' + action.billId);
+      if (name === 'voidBill') { bill.status = 'voided'; bill.voidedAt = new Date().toISOString(); }
+      else { bill.status = 'active'; bill.voidedAt = ''; }
+      set('mock_bills', bills);
+      return { success: true, billId: action.billId };
     }
 
     case 'deleteBill': {

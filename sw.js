@@ -1,4 +1,4 @@
-const CACHE = 'baankuptan-v11';
+const CACHE = 'baankuptan-v12';
 const ASSETS = [
   '/delivery-note/',
   '/delivery-note/index.html',

@@ -6,6 +6,7 @@
 let docType = 'delivery';
 let productPriceMap = {}; // ชื่อสินค้า -> ราคาล่าสุด (เติมราคาให้อัตโนมัติ)
 let shopInfoMap = {};     // ชื่อร้าน -> {address, taxId} (เติมอัตโนมัติเมื่อเลือกร้านเดิม)
+let editingBillId = null; // ถ้ามี = โหมดแก้ไขบิลเดิม (index.html?billId=...)
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -16,9 +17,7 @@ async function init() {
   document.getElementById('doc-toggle').addEventListener('click', (e) => {
     const btn = e.target.closest('button');
     if (!btn) return;
-    docType = btn.dataset.type;
-    document.querySelectorAll('#doc-toggle button').forEach(b => b.classList.toggle('active', b === btn));
-    document.getElementById('receipt-fields').hidden = (docType !== 'receipt');
+    setDocType(btn.dataset.type);
   });
 
   document.getElementById('btn-add-item').addEventListener('click', () => addItemRow());
@@ -27,10 +26,53 @@ async function init() {
   // เลือก/พิมพ์ร้านที่เคยมี -> เติมที่อยู่/เลขภาษีให้อัตโนมัติ
   document.getElementById('shop').addEventListener('change', autofillShopInfo);
 
-  addItemRow(); // แถวแรก
-
   // โหลดร้าน + สินค้า (ไม่บล็อกการกรอก)
   loadShopsAndProducts();
+
+  const editId = getUrlParam('billId');
+  if (editId) await loadForEdit(editId);
+  else addItemRow(); // แถวแรก
+}
+
+/** โหมดแก้ไข: ดึงบิลเดิมมาเติมฟอร์ม (บิลที่ยกเลิกแล้วแก้ไม่ได้) */
+async function loadForEdit(billId) {
+  showLoading('กำลังเปิดบิลเดิม...');
+  try {
+    const { bill, items } = await getBill(billId);
+    if (bill.status === 'voided') {
+      hideLoading();
+      toast(`บิล ${billId} ถูกยกเลิกแล้ว แก้ไขไม่ได้ — กู้คืนก่อน`, 'error');
+      setTimeout(() => { location.href = 'history.html'; }, 1800);
+      return;
+    }
+
+    editingBillId = bill.billId;
+    setDocType(bill.docType === 'receipt' ? 'receipt' : 'delivery');
+    document.getElementById('shop').value = bill.shopName || '';
+    document.getElementById('bill-date').value = bill.date || getTodayDateString();
+    document.getElementById('cust-address').value = bill.shopAddress || '';
+    document.getElementById('cust-taxid').value = bill.shopTaxId || '';
+
+    document.getElementById('items-container').innerHTML = '';
+    (items && items.length ? items : [null]).forEach(it => addItemRow(it || undefined));
+
+    document.getElementById('edit-bill-no').textContent = bill.billId;
+    document.getElementById('edit-banner').hidden = false;
+    document.getElementById('btn-save').textContent = '💾 บันทึกการแก้ไข & พิมพ์';
+    document.title = `แก้ไขบิล ${bill.billId} — บ้านกัปตัน`;
+  } catch (e) {
+    toast('เปิดบิลไม่สำเร็จ: ' + e.message, 'error');
+    addItemRow();
+  } finally {
+    hideLoading();
+  }
+}
+
+/** ตั้งประเภทเอกสาร + ซิงก์ปุ่ม toggle และช่องเฉพาะใบเสร็จ */
+function setDocType(type) {
+  docType = type;
+  document.querySelectorAll('#doc-toggle button').forEach(b => b.classList.toggle('active', b.dataset.type === type));
+  document.getElementById('receipt-fields').hidden = (type !== 'receipt');
 }
 
 function autofillShopInfo() {
@@ -140,9 +182,12 @@ async function saveCurrentBill() {
   const shopAddress = docType === 'receipt' ? document.getElementById('cust-address').value.trim() : '';
   const shopTaxId = docType === 'receipt' ? document.getElementById('cust-taxid').value.trim() : '';
 
-  showLoading('กำลังบันทึก...');
+  showLoading(editingBillId ? 'กำลังบันทึกการแก้ไข...' : 'กำลังบันทึก...');
   try {
-    const res = await saveBill({ docType, date, shopName, shopAddress, shopTaxId, items, totalAmount: total });
+    const payload = { docType, date, shopName, shopAddress, shopTaxId, items, totalAmount: total };
+    const res = editingBillId
+      ? await updateBill({ ...payload, billId: editingBillId })   // แก้ไขบิลเดิม — เลขบิลไม่เปลี่ยน
+      : await saveBill(payload);
     invalidateBillsCache();
     hideLoading();
     // ไปหน้าพิมพ์

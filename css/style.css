@@ -170,11 +170,11 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);}
 .chip.active{background:var(--teal);color:#fff;border-color:var(--teal);}
 
 .bill-card{
-  display:flex;align-items:center;gap:12px;
   background:var(--paper);border:1px solid var(--line);border-radius:12px;
-  padding:14px;margin-bottom:10px;cursor:pointer;box-shadow:0 2px 8px var(--shadow);
+  padding:14px;margin-bottom:10px;box-shadow:0 2px 8px var(--shadow);
 }
 .bill-card:hover{border-color:var(--teal);}
+.bill-card .bc-top{display:flex;align-items:center;gap:12px;cursor:pointer;}
 .bill-card .bc-main{flex:1;min-width:0;}
 .bill-card .bc-shop{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .bill-card .bc-meta{font-size:13px;color:var(--muted);margin-top:2px;}
@@ -184,6 +184,36 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);}
 }
 .badge-delivery{background:var(--mint-soft);color:var(--teal-deep);}
 .badge-receipt{background:var(--cream-soft);color:#8a6b16;}
+.badge-void{background:#f6dcd6;color:var(--danger);}
+
+/* ปุ่มจัดการบิลบนการ์ด (แก้ไข / ยกเลิก / กู้คืน) */
+.bc-actions{
+  display:flex;gap:8px;justify-content:flex-end;
+  margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);
+}
+.mini{
+  font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
+  border:1px solid var(--line);background:var(--mint-tint);color:var(--teal-deep);
+  border-radius:999px;padding:7px 14px;
+}
+.mini:hover{border-color:var(--teal);}
+.mini-danger{background:#fdf1ee;color:var(--danger);border-color:#f0cdc4;}
+.mini-danger:hover{border-color:var(--danger);}
+
+/* บิลที่ยกเลิกแล้ว — จางลงและขีดฆ่าชื่อร้าน แต่ยังอยู่ในประวัติ */
+.bill-card.voided{background:#fbfbfa;}
+.bill-card.voided .bc-top{opacity:.55;}
+.bill-card.voided .bc-shop{text-decoration:line-through;}
+
+/* แถบแจ้งว่ากำลังแก้ไขบิลเดิม (หน้าออกบิล) */
+.edit-banner{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--cream-soft);border:1px solid var(--cream);
+  border-radius:12px;padding:12px 14px;margin-bottom:14px;
+  font-size:14px;font-weight:600;color:var(--teal-deep);
+}
+.edit-banner[hidden]{display:none;}
+.edit-banner a{margin-left:auto;font-weight:700;text-decoration:underline;}
 
 .empty-state{text-align:center;color:var(--muted);padding:40px 16px;}
 .empty-state .em{font-size:40px;margin-bottom:10px;}

@@ -15,6 +15,8 @@
 - **พิมพ์ A4:** ดีไซน์แบรนด์ (มิ้นต์/ครีม/เขียว) → Save as PDF → แชร์ LINE; ช่องเซ็นซ้าย-ขวา (ใบส่งของ: ผู้ส่ง/ผู้รับสินค้า, ใบเสร็จ: ผู้ส่งของ/ผู้รับเงิน)
 - **เลือกขนาดพิมพ์ A4 / A5:** A5 = บิลย่อเตี้ยลงพอดี "ครึ่งบน" ของ A4 **แนวตั้ง** (ไม่ต้องหมุนกระดาษ — page เป็น portrait เหมือน A4) มีเส้นประตัด ตัดแนวนอน 1 รอยได้ใบเล็ก A5 แนวนอน; A5 ใช้ตาราง 3 แถว (`MIN_ROWS_A5`), จำค่าใน localStorage `bk_paper_size`
 - **ประวัติบิล:** ลิสต์ + ป้ายประเภท + ค้นชื่อร้าน/เลขบิล + กรองประเภท + แตะเพื่อพิมพ์ซ้ำ
+- **แก้ไขบิล:** ปุ่ม "แก้ไข" บนการ์ดประวัติ → `index.html?billId=...` เติมฟอร์มให้ครบ แก้แล้วบันทึกทับ **โดยคงเลขบิลเดิม** (ไม่กินเลขใหม่, `updateBill`)
+- **ยกเลิกบิล (ไม่ลบทิ้ง):** ปุ่ม "ยกเลิกบิล" ติดสถานะ `voided` — แถวยังอยู่ในชีต เลขบิลไม่หายไปจากลำดับ, การ์ดขึ้นป้ายแดง+ขีดฆ่า, หน้าพิมพ์ประทับตรา "ยกเลิก" และซ่อนปุ่มพิมพ์, แก้ไขไม่ได้จนกว่าจะกด **กู้คืนบิล**
 - **ตั้งค่าหัวบิล:** ชื่อร้าน/คำโปรย/เบอร์ + อัปโหลดโลโก้ (ย่อ+เข้ารหัสอัตโนมัติ)
 - **PWA:** Add to Home Screen, ใช้ offline ได้ (SW network-first)
 
@@ -58,10 +60,11 @@ manifest.json   sw.js — PWA
 | `Settings`  | storeName, tagline, phone, logoBase64  *(แถวเดียว)* |
 | `Shops`     | shopId, name, phone, address, taxId, createdAt |
 | `Products`  | productId, name, defaultPrice |
-| `Bills`     | billId, docType, date, shopId, shopName, shopAddress, shopTaxId, totalAmount, itemCount, createdAt |
+| `Bills`     | billId, docType, date, shopId, shopName, shopAddress, shopTaxId, totalAmount, itemCount, createdAt, status, voidedAt, updatedAt |
 | `BillItems` | billId, lineNo, productName, qty, unitPrice, amount |
 
 - `docType` = `delivery` (ใบส่งของ) / `receipt` (ใบเสร็จ)
+- `status` = `active` / `voided` — **แถวเก่าที่ยังไม่มีคอลัมน์นี้ (ค่าว่าง) นับเป็น `active`** (normalize ทั้งใน `getBills_`/`getBill_` และ mock)
 - เลขบิล `billId` รูปแบบ `<พ.ศ.2หลัก><เดือน>-<seq3>` เช่น `6907-001` (รันด้วย LockService + Script Property `BILL_SEQ`)
 
 ## MOCK MODE (ทดสอบได้ทันทีไม่ต้องต่อ backend)
@@ -97,6 +100,8 @@ repo เดียวกับที่ตั้ง Pages ไว้ (`lpd11.githu
 - **`print.html` ไม่ได้โหลด `style.css`** → print.css ต้องมี `box-sizing:border-box` (`.doc-stage *`) เอง ไม่งั้นแถวตาราง `height`+`padding` บวกกันทำให้แถวว่างสูงเกิน; และต้องมีสไตล์ `.loading-overlay` เองไม่งั้นข้อความ loading โผล่ค้าง
 - **พิมพ์สีพื้นหลังไม่ออก** เป็นค่า default ของเบราว์เซอร์ → ต้องมี `print-color-adjust:exact` (ใส่ที่ `.paper` เป็น inherited) ไม่งั้นหัวตาราง/ยอดรวมสีหาย
 - **ผลข้างเคียงของ `print-color-adjust:exact`:** พื้นหลัง *ทุกจุด* ถูกพิมพ์จริง รวมถึงตัว `.paper` เอง → `--p-paper` ต้องเป็น `#fff` สนิท (เดิม `#FCFCFA` ออกมาเป็นคราบจางทั้งแผ่น). ส่วนซีบร้า `nth-child(even)` **user เลือกให้คงไว้ทั้งตารางรวมแถวเปล่า** (เคยลองตัดแถวเปล่าเป็นขาวแล้วไม่เอา) — แถบมิ้นต์จางในแถวว่างจึงเป็นของตั้งใจ ไม่ใช่บั๊ก
+- **แก้ไขบิลใช้ `setByHeader_()`** (เขียนทับเซลล์ตาม header) ส่วนรายการสินค้าใช้ `writeBillItems_()` = **ลบแถวเดิมของบิลนั้นทิ้งแล้วเขียนใหม่ทั้งชุด** (ง่ายและกัน lineNo เพี้ยน) — `updateBill_` ไม่แตะ `billId`/`createdAt` และไม่เรียก `nextBillId_()` เด็ดขาด
+- **"ยกเลิก" ไม่ใช่ "ลบ":** `voidBill_` แค่ติด `status=voided` (มี `unvoidBill_` กู้คืน) ฟังก์ชัน `deleteBill_` ยังอยู่ใน Code.gs แต่**ไม่มี UI เรียกแล้ว** — ถ้าจะใช้ต้องรู้ว่าเลขบิลจะหายไปจากลำดับถาวร (`BILL_SEQ` เดินหน้าอย่างเดียว)
 - **แก้สคีมา Sheet:** เพิ่มคอลัมน์ใหม่ใน `HEADERS` แล้ว `sheet_()` จะ `ensureColumns_()` ต่อท้ายให้ชีตเดิมอัตโนมัติ; การเขียนแถวใช้ `appendByHeader_()` (จับคู่ตาม header ไม่พึ่งลำดับคอลัมน์) — **อย่าใช้ `appendRow([...])` แบบ positional** เพราะสคีมา migrate แล้วลำดับจะเพี้ยน
 - manifest ใช้ไอคอน SVG — ใช้ Add to Home Screen ได้ ถ้าอยากให้ install prompt เต็มรูปแบบ ค่อยเพิ่ม PNG 192/512
 
@@ -135,3 +140,4 @@ repo เดียวกับที่ตั้ง Pages ไว้ (`lpd11.githu
 1. **retry ตอน cold start** — ยิง API ครั้งแรกแล้วเจอ 404 (Apps Script ตื่นช้า) → retry อัตโนมัติ; ย่อพรีวิว A4 ให้พอดีจอมือถือ (`fitPaper`)
 2. **เลือกขนาดพิมพ์ A4 / A5** — A5 = บิลย่อเตี้ยพอดีครึ่งบนของ A4 **แนวตั้ง** (ลองแบบจัดกึ่งกลาง A4 แนวนอนแล้ว user เลือกแบบชิดบน/ตัดแนวนอนรอยเดียวแทน)
 3. **กระดาษขาวสะอาดตอนพิมพ์** (ฟีดแบ็ก) — พื้นแผ่นมีคราบสีจางเพราะ `--p-paper:#FCFCFA` + `print-color-adjust:exact` พิมพ์พื้นออกมาจริง → เปลี่ยนเป็น `#fff`; เคยลองให้แถวเปล่าเป็นขาวด้วยแต่ user เลือกคงซีบร้าไว้ทั้งตาราง
+4. **แก้ไขบิล + ยกเลิกบิล** — ปุ่มบนการ์ดหน้าประวัติ; backend เพิ่ม `updateBill_`/`voidBill_`/`unvoidBill_` + คอลัมน์ `status`/`voidedAt`/`updatedAt` (ensureColumns_ migrate ชีตเดิมเอง); หน้าออกบิลรับ `?billId=` เข้าโหมดแก้ไข (แบนเนอร์ + ปุ่มเปลี่ยนเป็น "บันทึกการแก้ไข"); หน้าพิมพ์ประทับตรา "ยกเลิก" + ซ่อนปุ่มพิมพ์เมื่อบิล voided. เลือก "ยกเลิก" แทน "ลบจริง" เพราะเลขบิลจะได้ไม่หายไปจากลำดับ (สำคัญกับใบเสร็จที่มีเลขผู้เสียภาษี). ทดสอบ mock 19 เคสผ่านด้วย Node (vm + localStorage จำลอง ไม่ต้องใช้ jsdom เพราะ api.js ไม่แตะ DOM)
