@@ -137,7 +137,6 @@ table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
   .loading-overlay{display:none!important;}
   /* ตอนพิมพ์ยกเลิกการย่อ (fitPaper) กลับเป็น A4 เต็ม (ขนาดกระดาษกำหนดที่ #page-style) */
   .paper{box-shadow:none;width:210mm;min-height:auto;padding:12mm 10mm;border-radius:0;margin:0 auto;zoom:1!important;}
-  /* A5: ย่อ A4 ~0.707 เท่า (=A5 พอดี) จัดกึ่งกลางแผ่น A4 แนวนอน */
-  body.size-a5 .doc-stage{display:flex;align-items:center;justify-content:center;min-height:210mm;}
+  /* A5: ย่อ A4 ~0.707 เท่า (=A5 พอดี) ชิดซ้ายบนของ A4 แนวนอน ครึ่งขวาเว้นว่างไว้ตัดกลาง */
   body.size-a5 .paper{zoom:0.707!important;margin:0!important;}
 }
