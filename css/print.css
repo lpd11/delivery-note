@@ -10,7 +10,7 @@
   --p-teal:#1B6B78;
   --p-teal-deep:#12505A;
   --p-ink:#173B41;
-  --p-paper:#FCFCFA;
+  --p-paper:#fff;   /* ต้องขาวสนิท: print-color-adjust:exact ทำให้พื้นกระดาษถูกพิมพ์จริง สีอมครีมจะเห็นเป็นคราบจางบนแผ่น */
   --p-line:#1B6B78;
   --p-grid:#7FB4BC;
   --p-muted:#5E7A80;
@@ -89,6 +89,8 @@ table.doc-table tbody td{
   height:36px;padding:6px 10px;vertical-align:middle;   /* ทุกแถวสูงเท่ากัน 36px */
 }
 table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
+/* แถวเปล่า (filler) ต้องขาวสะอาด — ไม่งั้นซีบร้าไปโดนแถวที่ไม่มีของ แล้วพิมพ์ออกมาเป็นแถบจางๆ */
+table.doc-table tbody tr.empty-cell td{background:#fff;}
 .c-no{width:12%;text-align:center;color:var(--p-muted);}
 .c-desc{width:auto;}
 .c-qty{width:14%;text-align:center;font-variant-numeric:tabular-nums;}
