@@ -131,12 +131,34 @@ table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
 @keyframes spin{to{transform:rotate(360deg);}}
 /* คงตัวหมุนไว้แม้เปิด reduce motion (เป็น feedback ที่จำเป็น) */
 
+/* ==========================================================================
+   A5 แนวนอน = บิลย่อเตี้ยลงพอดี "ครึ่งบน" ของ A4 แนวตั้ง (ไม่ต้องหมุนกระดาษ)
+   ตัดตามเส้นประแนวนอนได้ใบเล็ก A5 แนวนอน — ใช้ทั้งพรีวิวจอ + พิมพ์
+   ========================================================================== */
+body.size-a5 .paper{
+  height:148.5mm;min-height:148.5mm;   /* ครึ่งบนของ A4 (297/2) */
+  padding:8mm 10mm;overflow:hidden;
+  border-bottom:1.5px dashed #8aa0a5;   /* เส้นตัด */
+}
+body.size-a5 .biz .logo{width:56px;height:56px;}
+body.size-a5 .biz h1{font-size:22px;}
+body.size-a5 .doc-title{font-size:19px;padding:5px 13px;}
+body.size-a5 .rule{margin:8px 0 8px;}
+body.size-a5 .party-block{margin-bottom:8px;}
+body.size-a5 .party{margin-bottom:3px;}
+body.size-a5 table.doc-table thead th{height:28px;}
+body.size-a5 table.doc-table tbody td{height:24px;padding:3px 10px;}
+body.size-a5 .totrow td{padding:6px 10px;}
+body.size-a5 .signs{margin-top:12px;}
+body.size-a5 .sign .line{height:26px;}
+body.size-a5 .foot-note{margin-top:8px;}
+
 @media print{
   .doc-stage{background:#fff;padding:0;min-height:auto;overflow:visible;}
   .doc-actions,.size-hint{display:none;}
   .loading-overlay{display:none!important;}
   /* ตอนพิมพ์ยกเลิกการย่อ (fitPaper) กลับเป็น A4 เต็ม (ขนาดกระดาษกำหนดที่ #page-style) */
   .paper{box-shadow:none;width:210mm;min-height:auto;padding:12mm 10mm;border-radius:0;margin:0 auto;zoom:1!important;}
-  /* A5: ย่อ A4 ~0.707 เท่า (=A5 พอดี) ชิดซ้ายบนของ A4 แนวนอน ครึ่งขวาเว้นว่างไว้ตัดกลาง */
-  body.size-a5 .paper{zoom:0.707!important;margin:0!important;}
+  /* A5: บิลอยู่ครึ่งบนของ A4 แนวตั้ง ชิดขอบบน (ตัดที่เส้น 148.5mm) */
+  body.size-a5 .paper{margin:0!important;padding:8mm 10mm;}
 }

@@ -4,8 +4,28 @@
  */
 document.addEventListener('DOMContentLoaded', () => { initSize(); render(); });
 
-// จำนวนแถวขั้นต่ำในตาราง (เติมแถวว่างให้ใบดูเต็ม)
+// จำนวนแถวขั้นต่ำในตาราง (เติมแถวว่างให้ใบดูเต็ม) — A5 น้อยกว่าเพราะพื้นที่ครึ่งแผ่น
 const MIN_ROWS = 6;
+const MIN_ROWS_A5 = 3;
+let curItems = [];
+
+/** เติมแถวรายการ + แถวว่างตามขนาดกระดาษปัจจุบัน (เรียกซ้ำได้เมื่อสลับ A4/A5) */
+function fillItems() {
+  const items = curItems;
+  const min = document.body.classList.contains('size-a5') ? MIN_ROWS_A5 : MIN_ROWS;
+  const rows = items.map((it, i) => `
+    <tr>
+      <td class="c-no">${i + 1}</td>
+      <td>${escapeHtml(it.productName)}</td>
+      <td class="c-qty">${trimNum(it.qty)}</td>
+      <td class="c-price">${formatMoney(it.unitPrice)}</td>
+      <td class="c-amt">${formatMoney(it.amount)}</td>
+    </tr>`);
+  for (let i = items.length; i < min; i++) {
+    rows.push(`<tr class="empty-cell"><td class="c-no"></td><td></td><td></td><td></td><td></td></tr>`);
+  }
+  document.getElementById('doc-items').innerHTML = rows.join('');
+}
 
 // ==========================================
 // เลือกขนาดพิมพ์ A4 (เต็มแผ่น) / A5 (ครึ่งแผ่นบน A4 แนวนอน)
@@ -25,15 +45,14 @@ function applySize(size) {
   document.body.classList.toggle('size-a5', size === 'a5');
   document.querySelectorAll('#size-toggle button').forEach(b => b.classList.toggle('active', b.dataset.size === size));
 
-  // เปลี่ยนขนาด/แนวกระดาษของการพิมพ์: A5 = A4 แนวนอน (ไว้พิมพ์ครึ่งซ้ายแล้วตัดกลาง)
-  document.getElementById('page-style').textContent = (size === 'a5')
-    ? '@page{size:A4 landscape;margin:0;}'
-    : '@page{size:A4;margin:0;}';
+  // A4 และ A5 ใช้กระดาษ "แนวตั้ง" เหมือนกัน (ไม่ต้องหมุน!) — A5 แค่ย่อบิลเป็นแนวนอนไว้ครึ่งบน
+  document.getElementById('page-style').textContent = '@page{size:A4;margin:0;}';
 
   document.getElementById('size-hint').textContent = (size === 'a5')
-    ? 'A5: พิมพ์ลงกระดาษ A4 “แนวนอน” บิลจะอยู่ครึ่งซ้าย ตัดกลางได้ใบเล็กพอดี (ในหน้าต่างพิมพ์เลือกแนวนอน/Landscape ถ้าไม่เปลี่ยนเอง)'
+    ? 'A5: พิมพ์กระดาษ A4 แนวตั้งตามปกติ (ไม่ต้องหมุน) บิลจะอยู่ครึ่งบน — ตัดตามเส้นแนวนอนได้ใบเล็ก'
     : '';
 
+  fillItems();  // ปรับจำนวนแถวว่างให้พอดีขนาด
   fitPaper();
 }
 
@@ -98,21 +117,9 @@ function applyBill(bill, items) {
     document.getElementById('party-taxid').textContent = bill.shopTaxId || ' ';
   }
 
-  // รายการ
-  const tbody = document.getElementById('doc-items');
-  const rows = (items || []).map((it, i) => `
-    <tr>
-      <td class="c-no">${i + 1}</td>
-      <td>${escapeHtml(it.productName)}</td>
-      <td class="c-qty">${trimNum(it.qty)}</td>
-      <td class="c-price">${formatMoney(it.unitPrice)}</td>
-      <td class="c-amt">${formatMoney(it.amount)}</td>
-    </tr>`);
-  // เติมแถวว่างให้ครบขั้นต่ำ
-  for (let i = items.length; i < MIN_ROWS; i++) {
-    rows.push(`<tr class="empty-cell"><td class="c-no"></td><td></td><td></td><td></td><td></td></tr>`);
-  }
-  tbody.innerHTML = rows.join('');
+  // รายการ (เติมแถวว่างตามขนาด — A5 น้อยกว่าเพื่อให้พอดีครึ่งแผ่น)
+  curItems = items || [];
+  fillItems();
 
   // ยอดรวม
   const total = Number(bill.totalAmount) || (items || []).reduce((s, it) => s + (Number(it.amount) || 0), 0);
