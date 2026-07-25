@@ -88,9 +88,8 @@ table.doc-table thead th{
 table.doc-table tbody td{
   height:36px;padding:6px 10px;vertical-align:middle;   /* ทุกแถวสูงเท่ากัน 36px */
 }
+/* ซีบร้าต่อเนื่องทั้งตาราง รวมแถวเปล่า (user เลือกให้ลายสลับไม่ขาดตอน) */
 table.doc-table tbody tr:nth-child(even) td{background:rgba(167,224,212,.20);}
-/* แถวเปล่า (filler) ต้องขาวสะอาด — ไม่งั้นซีบร้าไปโดนแถวที่ไม่มีของ แล้วพิมพ์ออกมาเป็นแถบจางๆ */
-table.doc-table tbody tr.empty-cell td{background:#fff;}
 .c-no{width:12%;text-align:center;color:var(--p-muted);}
 .c-desc{width:auto;}
 .c-qty{width:14%;text-align:center;font-variant-numeric:tabular-nums;}
