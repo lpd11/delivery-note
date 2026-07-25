@@ -31,7 +31,7 @@ function applySize(size) {
     : '@page{size:A4;margin:0;}';
 
   document.getElementById('size-hint').textContent = (size === 'a5')
-    ? 'A5: พิมพ์ลงกระดาษ A4 “แนวนอน” บิลจะอยู่ครึ่งซ้าย ตัดกลางได้ใบเล็กพอดี (ในหน้าต่างพิมพ์เลือกแนวนอน/Landscape ถ้าไม่เปลี่ยนเอง)'
+    ? 'A5: บิลย่อขนาด A5 จัดกึ่งกลางกระดาษ A4 แนวนอน (ในหน้าต่างพิมพ์เลือกแนวนอน/Landscape ถ้าไม่เปลี่ยนเอง)'
     : '';
 
   fitPaper();
