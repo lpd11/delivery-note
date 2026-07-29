@@ -114,7 +114,18 @@ async function doVoid(billId, isVoid) {
     renderList();
     toast(isVoid ? `ยกเลิกบิล ${billId} แล้ว` : `กู้คืนบิล ${billId} แล้ว`);
   } catch (err) {
-    toast('ทำรายการไม่สำเร็จ: ' + err.message, 'error');
+    // เหมือนหน้าออกบิล: คำตอบอาจหายกลางทางทั้งที่ทำสำเร็จแล้ว → เช็คสถานะจริงก่อนแจ้ง error
+    const want = isVoid ? 'voided' : 'active';
+    let real = null;
+    try { real = (await getBill(billId)).bill.status; } catch (e2) { /* เช็คไม่ได้ */ }
+    if (real === want) {
+      if (b) b.status = want;
+      setBillsCache(allBills);
+      renderList();
+      toast(isVoid ? `ยกเลิกบิล ${billId} แล้ว` : `กู้คืนบิล ${billId} แล้ว`);
+    } else {
+      toast('ทำรายการไม่สำเร็จ: ' + err.message, 'error');
+    }
   } finally {
     hideLoading();
   }

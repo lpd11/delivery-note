@@ -90,8 +90,9 @@ async function apiRequest(action, method = 'GET', silent = false) {
       }
     }
   }
+  // ไม่ใช้ alert() แล้ว — ทุกหน้าที่เรียก API จับ error เองและขึ้น toast/ข้อความในหน้า
+  // (alert เด้งซ้ำและน่าตกใจ ทั้งที่บางกรณี POST บันทึกสำเร็จแล้วแต่คำตอบหายระหว่างทาง)
   console.error('API Call Failed:', lastErr);
-  if (!silent) alert('เชื่อมต่อฐานข้อมูลล้มเหลว: ' + lastErr.message);
   throw lastErr;
 }
 

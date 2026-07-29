@@ -193,8 +193,39 @@ async function saveCurrentBill() {
     // ไปหน้าพิมพ์
     location.href = `print.html?billId=${encodeURIComponent(res.billId)}`;
   } catch (e) {
+    // POST ไป Apps Script บางครั้ง "บันทึกสำเร็จแล้วแต่คำตอบหายกลางทาง"
+    // (redirect หลังโพสต์หลุดบนมือถือ → ได้ error แปลกๆ เช่น "Invalid GET action: undefined")
+    // ถ้าเด้ง error ทันทีแล้วผู้ใช้กดบันทึกซ้ำ = บิลซ้ำ 2 ใบ → เช็คก่อนว่าเข้าไปแล้วจริงไหม
+    showLoading('กำลังตรวจสอบว่าบันทึกเข้าไปแล้วหรือยัง...');
+    const savedId = await verifySaved({ date, shopName, items, total });
     hideLoading();
+    if (savedId) {
+      invalidateBillsCache();
+      toast('บันทึกสำเร็จ (สัญญาณสะดุดตอนตอบกลับ)');
+      location.href = `print.html?billId=${encodeURIComponent(savedId)}`;
+      return;
+    }
     toast('บันทึกไม่สำเร็จ: ' + e.message, 'error');
+  }
+}
+
+/** เช็คกับฐานข้อมูลว่าบิลที่เพิ่งกดบันทึกเข้าไปแล้วจริงไหม — คืนเลขบิลถ้าเจอ */
+async function verifySaved({ date, shopName, items, total }) {
+  const same = (b) => String(b.shopName || '').trim() === shopName
+    && Number(b.totalAmount) === Number(total)
+    && Number(b.itemCount) === items.length;
+  try {
+    if (editingBillId) {
+      const { bill } = await getBill(editingBillId);
+      return (same(bill) && String(bill.date) === String(date)) ? editingBillId : null;
+    }
+    const bills = await getBills(true);          // เรียงใหม่สุดขึ้นก่อน
+    const newest = (bills || [])[0];
+    if (!newest || !same(newest)) return null;
+    const age = Date.now() - new Date(newest.createdAt).getTime();
+    return (age >= 0 && age < 5 * 60 * 1000) ? newest.billId : null;  // ต้องเพิ่งสร้างจริงๆ
+  } catch (err) {
+    return null;   // ตรวจไม่ได้ (เน็ตล่ม) → ถือว่ายังไม่สำเร็จ
   }
 }
 
