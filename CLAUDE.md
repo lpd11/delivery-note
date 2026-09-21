@@ -30,7 +30,7 @@
 | Hosting | GitHub Pages → `https://lpd11.github.io/delivery-note/` |
 | Deploy tool (backend) | clasp |
 
-โครงสร้างยกแพตเทิร์นมาจาก `d:\APP\Car-Tracker` (api bridge + mock mode + SWR cache)
+โครงสร้างยกแพตเทิร์นมาจาก `d:\APP\personal\Car-Tracker` (api bridge + mock mode + SWR cache)
 
 ## โครงสร้างไฟล์
 
@@ -131,7 +131,7 @@ repo เดียวกับที่ตั้ง Pages ไว้ (`lpd11.githu
 
 สร้างเสร็จ + deploy จริง + ปรับตามฟีดแบ็กในเซสชันเดียว:
 
-1. **สร้างแอปทั้งชุด** — 4 หน้า (index/history/settings/print) + backend Apps Script + สคีมา 5 ชีต, ยกโครง api bridge/mock/SWR cache จาก `d:\APP\Car-Tracker`
+1. **สร้างแอปทั้งชุด** — 4 หน้า (index/history/settings/print) + backend Apps Script + สคีมา 5 ชีต, ยกโครง api bridge/mock/SWR cache จาก `d:\APP\personal\Car-Tracker`
 2. **ดีไซน์เอกสาร A4** — user รีวิว mockup แล้วอนุมัติ (โทนจากโลโก้บ้าน+เค้ก), เขียนหน้าพิมพ์ + `bahtText()` แปลงเลขเป็นตัวอักษรไทย (เทสต์ผ่าน Node+jsdom)
 3. **Deploy** — `clasp create-script --type sheets` สร้าง Sheet+script, deploy web app, ใส่ URL ใน api.js; สร้าง repo `lpd11/delivery-note` + เปิด GitHub Pages; user authorize สิทธิ์ Apps Script เอง (จำเป็น กดแทนไม่ได้)
 4. **แก้หน้าพิมพ์** (ฟีดแบ็ก) — สีพื้นหลังไม่พิมพ์ → `print-color-adjust:exact`; ข้อความ loading โผล่ค้าง → เพิ่มสไตล์ overlay ใน print.css
